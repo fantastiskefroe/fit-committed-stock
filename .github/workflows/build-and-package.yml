@@ -6,7 +6,7 @@ on:
       - main
 
 jobs:
-  build_and_publish:
+  build_and_package:
     runs-on: ubuntu-latest
     env:
       IMAGE_NAME: fit-committed-stock
