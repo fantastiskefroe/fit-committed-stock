@@ -18,6 +18,7 @@ RUN npm run build
 
 # Stage 2: Serve app
 
+# Lightweight http server written in Go
 FROM pierrezemb/gostatic:latest
 
 # Copy the build output to replace the default nginx contents.
