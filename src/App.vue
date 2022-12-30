@@ -1,18 +1,29 @@
 <script lang="ts">
+  import { OrderControllerApi, Configuration, FulfillmentStatus } from '@/api/shopify-data';
+
+  const OrdersApi = new OrderControllerApi(
+    new Configuration({
+      basePath: "https://shopify-data.it.fantastiskefroe.dk"
+    })
+  )
+
+  type Line = {
+    message: String
+  }
+
   export default {
 
     data() {
       return {
-        lines: [] as string[]
+        lines: [] as Line[]
       }
     },
     methods: {
       refetch() {
-        fetch("https://shopify-data.it.fantastiskefroe.dk/orders").then(
-          data => {
-            console.log(data);
-          }
-        ).catch(err => this.lines = ["foo"])
+        OrdersApi.ordersGet({fulfillmentStatus: FulfillmentStatus.Null }).subscribe(orders => {
+          console.log("RXJS", orders)
+          this.lines = orders.map( order => { return {message: order.name} } )
+        })
       }
     },
     mounted() {
@@ -32,10 +43,9 @@
 
     <div class="row mb-3 justify-content-center">
       <ul>
-        <li>Stock 1</li>
-        <li>Stock 2</li>
-        <li>Stock 3</li>
-        <li>Stock 4</li>
+        <li v-for="item in lines">
+          {{ item.message }}
+        </li>
       </ul>
     </div>
   </div>
