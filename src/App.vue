@@ -9,10 +9,10 @@
 
     <div class="row mb-3 justify-content-center">
       <ul>
-        <li>Stock</li>
-        <li>Stock</li>
-        <li>Stock</li>
-        <li>Stock</li>
+        <li>Stock 1</li>
+        <li>Stock 2</li>
+        <li>Stock 3</li>
+        <li>Stock 4</li>
       </ul>
     </div>
   </div>
