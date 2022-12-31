@@ -8,6 +8,7 @@
       <table class="table table-borderless">
         <thead class="fw-bold border-bottom sticky-top bg-white">
         <tr>
+          <th></th>
           <th>Titel</th>
           <th>SKU</th>
           <th class="text-center border-start border-end">Antal</th>
@@ -15,7 +16,8 @@
         </tr>
         </thead>
         <tbody>
-        <tr v-for="item in filteredLines" v-bind:key="item.sku">
+        <tr v-for="item in filteredLines" v-bind:key="item.sku" class="align-middle">
+          <td class="text-center"><img :src=getImageByLine(item) loading="lazy" class="rounded-1 border"></td>
           <td>{{ item.title }}</td>
           <td><span class="text-secondary">{{ item.sku }}</span></td>
           <td class="text-center border-start border-end">{{ item.quantity }}</td>
@@ -43,6 +45,8 @@
 import { OrdersApi } from '@/util/api';
 import { FulfillmentStatus, type OrderDTO, type OrderLineDTO } from '@/api/shopify-data';
 import { defineComponent } from 'vue';
+import ProductsService from "@/util/products-service";
+import type {Product} from "@/types/product";
 
 interface OrderLine {
   sku: string;
@@ -62,7 +66,8 @@ export default defineComponent({
   data() {
     return {
       lines: [] as OrderLineSummary[],
-      filter: '^[^F]' as string
+      filter: '^[^F]' as string,
+      products: [] as Product[]
     };
   },
   computed: {
@@ -79,28 +84,31 @@ export default defineComponent({
   },
   methods: {
     fetchOrders(): void {
+      ProductsService.getAll().then(products => {
+        this.products = products
+      });
       OrdersApi.ordersGet({ fulfillmentStatus: FulfillmentStatus.Null })
-        .subscribe((orders: OrderDTO[]) => {
-          this.lines = this.toOrderLineSummaries(orders);
-        });
+          .subscribe((orders: OrderDTO[]) => {
+            this.lines = this.toOrderLineSummaries(orders);
+          });
     },
     toOrderLineSummaries(orders: OrderDTO[]): OrderLineSummary[] {
       // Extract lines
       const orderLines: OrderLine[] = orders
-        .flatMap((order: OrderDTO) => order.line_items
-          .map((line: OrderLineDTO) => orderLineFromDTO(order, line)));
+          .flatMap((order: OrderDTO) => order.line_items
+              .map((line: OrderLineDTO) => orderLineFromDTO(order, line)));
 
       // Group by sku
       const orderLinesBySku = groupBy(orderLines, line => line.sku);
 
       // Combine to OrderLineSummaries
       return Array.from(orderLinesBySku.values())
-        .flatMap((orderLines) =>
-          orderLines
-            .map(toOrderLineSummary)
-            .reduce(combineSummaries)
-        )
-        .sort(summaryCompareSku);
+          .flatMap((orderLines) =>
+              orderLines
+                  .map(toOrderLineSummary)
+                  .reduce(combineSummaries)
+          )
+          .sort(summaryCompareSku);
 
       function orderLineFromDTO(order: OrderDTO, line: OrderLineDTO): OrderLine {
         return {
