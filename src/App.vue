@@ -1,24 +1,23 @@
 <template>
   <div class="container">
     <div class="row my-3">
-      <h1 class="border border-3 border-end-0 w-auto mx-auto">SOLGT LAGER</h1>
+      <h1>Solgt Lager</h1>
     </div>
-    <div class="row mb-3">
-      <button class="col-1 offset-10 btn btn-primary" @click="refetch()">opdater</button>
-    </div>
-    
+
     <div class="row mb-3 justify-content-center">
       <table class="table table-borderless">
         <thead class="fw-bold border-bottom sticky-top bg-white">
           <tr>
-            <td>Produkt titel</td>
-            <td class="text-center border-start border-end">ANTAL</td>
-            <td>ORDRER #</td>
+            <th>Titel</th>
+            <th>SKU</th>
+            <th class="text-center border-start border-end">Antal</th>
+            <th>Ordrer</th>
           </tr>
         </thead>
         <tbody>
-          <tr v-for="item in filteredLines">
-            <td>{{ item.sku }} | <span class="text-secondary">{{ item.title }}</span></td>
+          <tr v-for="item in filteredLines" v-bind:key="item.sku">
+            <td>{{ item.title }}</td>
+            <td><span class="text-secondary">{{ item.sku }}</span></td>
             <td class="text-center border-start border-end">{{ item.quantity }}</td>
             <td>{{ item.orderNumbers.join(", ") }}</td>
           </tr>
@@ -26,21 +25,24 @@
       </table>
     </div>
   </div>
-  <div id="filterBar" class="sticky-bottom container bg-white py-3 border border-bottom-0 rounded-top">
+
+  <div class="sticky-bottom container bg-white py-3 border border-bottom-0 rounded-top">
     <div class="row">
       <div class="col input-group">
         <span class="input-group-text">Filter</span><input class="form-control" type="text" v-model="filter">
       </div>
       <div class="col text-end">
-        <span>{{ filteredLines.length }} Produkter</span>  
+        <span>{{ filteredLines.length }} produkter</span>
       </div>
     </div>
   </div>
+
 </template>
 
 <script lang="ts">
 import { OrdersApi } from '@/util/api';
 import {FulfillmentStatus, type OrderLineDTO, type OrderDTO} from '@/api/shopify-data';
+import { defineComponent } from 'vue';
 
 interface Line {
   sku: string;
@@ -61,7 +63,7 @@ interface OrderLineSummary {
   orderNumbers: string[];
 }
 
-export default {
+export default defineComponent({
   data() {
     return {
       lines: [] as Line[],
@@ -129,7 +131,7 @@ export default {
         }
       }
 
-      function summaryCompareSku(a: OrderLineSummary,b: OrderLineSummary) : number { 
+      function summaryCompareSku(a: OrderLineSummary,b: OrderLineSummary) : number {
         return a.sku.localeCompare(b.sku);
       }
 
@@ -139,12 +141,12 @@ export default {
       const linesBySku = groupBy(orderLines, line => line.sku)
       // fold quantities
       const lineSummaries = Array.from(linesBySku.values())
-        .flatMap(lines => 
+        .flatMap(lines =>
           lines
             .map(toOrderLineSummary)
             .reduce(combineSummaries)
         )
-      
+
       return lineSummaries.sort(summaryCompareSku).map(toLine)
     }
   },
@@ -152,8 +154,7 @@ export default {
     // methods can be called in lifecycle hooks, or other methods!
     this.refetch()
   }
-}
-
+});
 </script>
 
 
