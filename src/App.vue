@@ -71,7 +71,13 @@ export default {
   computed: {
     filteredLines() : Line[] {
       if(this.filter.trim().length == 0) return this.lines;
-      return this.lines.filter(l => RegExp(this.filter).test(l.sku))
+      try {
+        const filterRegex = RegExp(this.filter, 'i')
+        console.log(filterRegex)
+        return this.lines.filter(l => filterRegex.test(l.sku))
+      } catch {
+        return []
+      }
     }
   },
   methods: {
