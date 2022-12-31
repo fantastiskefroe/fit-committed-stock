@@ -3,6 +3,8 @@
 # Use official node image as the base image
 FROM node:18-alpine as build
 
+RUN apk --update add openjdk8-jre
+
 # Set the working directory
 WORKDIR /usr/local/app
 
