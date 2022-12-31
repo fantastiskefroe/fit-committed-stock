@@ -44,13 +44,6 @@ import { OrdersApi } from '@/util/api';
 import { FulfillmentStatus, type OrderDTO, type OrderLineDTO } from '@/api/shopify-data';
 import { defineComponent } from 'vue';
 
-interface Line {
-  sku: string;
-  title: string;
-  quantity: number;
-  orderNumbers: string[];
-}
-
 interface OrderLine {
   sku: string;
   title: string;
@@ -68,12 +61,12 @@ interface OrderLineSummary {
 export default defineComponent({
   data() {
     return {
-      lines: [] as Line[],
+      lines: [] as OrderLineSummary[],
       filter: '^[^F]' as string
     };
   },
   computed: {
-    filteredLines(): Line[] {
+    filteredLines(): OrderLineSummary[] {
       if (this.filter.trim().length == 0) return this.lines;
       try {
         const filterRegex = RegExp(this.filter, 'i');
@@ -85,16 +78,31 @@ export default defineComponent({
     }
   },
   methods: {
-    refetch() {
-      OrdersApi
-        .ordersGet({ fulfillmentStatus: FulfillmentStatus.Null })
-        .subscribe(orders => {
-          this.lines = this.toLines(orders);
+    fetchOrders(): void {
+      OrdersApi.ordersGet({ fulfillmentStatus: FulfillmentStatus.Null })
+        .subscribe((orders: OrderDTO[]) => {
+          this.lines = this.toOrderLineSummaries(orders);
         });
-    }
-    ,
-    toLines(orders: OrderDTO[]): Line[] {
-      function fromDTO(order: OrderDTO, line: OrderLineDTO): OrderLine {
+    },
+    toOrderLineSummaries(orders: OrderDTO[]): OrderLineSummary[] {
+      // Extract lines
+      const orderLines: OrderLine[] = orders
+        .flatMap((order: OrderDTO) => order.line_items
+          .map((line: OrderLineDTO) => orderLineFromDTO(order, line)));
+
+      // Group by sku
+      const orderLinesBySku = groupBy(orderLines, line => line.sku);
+
+      // Combine to OrderLineSummaries
+      return Array.from(orderLinesBySku.values())
+        .flatMap((orderLines) =>
+          orderLines
+            .map(toOrderLineSummary)
+            .reduce(combineSummaries)
+        )
+        .sort(summaryCompareSku);
+
+      function orderLineFromDTO(order: OrderDTO, line: OrderLineDTO): OrderLine {
         return {
           sku: line.sku,
           title: line.title,
@@ -103,58 +111,41 @@ export default defineComponent({
         };
       }
 
-      function toLine(summary: OrderLineSummary): Line {
-        summary.orderNumbers.sort();
-        return summary;
-      }
-
-      function groupBy<K, V>(l: V[], keyExtractor: (v: V) => K): Map<K, V[]> {
-        return l.reduce((groups, value) => {
+      function groupBy<K, V>(list: V[], keyExtractor: (v: V) => K): Map<K, V[]> {
+        return list.reduce((groups: Map<K, V[]>, value: V) => {
           const key = keyExtractor(value);
-          let group = groups.get(key) ?? [];
+          const group = groups.get(key) ?? [];
           group.push(value);
           groups.set(key, group);
           return groups;
         }, new Map());
       }
 
-      const combineSummaries = (acc: OrderLineSummary, other: OrderLineSummary): OrderLineSummary => {
-        acc.quantity += other.quantity;
-        acc.orderNumbers = acc.orderNumbers.concat(other.orderNumbers);
-        return acc;
-      };
-
-      function toOrderLineSummary(line: OrderLine): OrderLineSummary {
+      function toOrderLineSummary(orderLine: OrderLine): OrderLineSummary {
         return {
-          sku: line.sku,
-          quantity: line.quantity,
-          title: line.title,
-          orderNumbers: Array.of(line.orderNumber)
+          sku: orderLine.sku,
+          quantity: orderLine.quantity,
+          title: orderLine.title,
+          orderNumbers: [orderLine.orderNumber]
+        };
+      }
+
+      function combineSummaries(acc: OrderLineSummary, other: OrderLineSummary): OrderLineSummary {
+        return {
+          sku: acc.sku,
+          title: acc.title,
+          quantity: acc.quantity + other.quantity,
+          orderNumbers: acc.orderNumbers.concat(other.orderNumbers).sort()
         };
       }
 
       function summaryCompareSku(a: OrderLineSummary, b: OrderLineSummary): number {
         return a.sku.localeCompare(b.sku);
       }
-
-      // Extract lines
-      const orderLines = orders.flatMap(order => order.line_items.map(line => fromDTO(order, line)));
-      // Group by sku
-      const linesBySku = groupBy(orderLines, line => line.sku);
-      // fold quantities
-      const lineSummaries = Array.from(linesBySku.values())
-        .flatMap(lines =>
-          lines
-            .map(toOrderLineSummary)
-            .reduce(combineSummaries)
-        );
-
-      return lineSummaries.sort(summaryCompareSku).map(toLine);
     }
   },
   mounted() {
-    // methods can be called in lifecycle hooks, or other methods!
-    this.refetch();
+    this.fetchOrders();
   }
 });
 </script>
