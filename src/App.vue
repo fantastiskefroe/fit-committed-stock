@@ -8,26 +8,26 @@
       <table class="table table-borderless">
         <thead class="fw-bold border-bottom sticky-top bg-white">
         <tr>
-          <th></th>
-          <th>Titel</th>
-          <th>SKU</th>
-          <th class="text-center border-start border-end">Antal</th>
+          <th class="d-print-none"></th>
+          <th class="border-end">Titel</th>
+          <th class="border-end">SKU</th>
+          <th class="text-center border-end">Antal</th>
           <th>Ordrer</th>
         </tr>
         </thead>
         <tbody>
         <tr v-for="summary in filteredOrderLineSummaries" v-bind:key="summary.sku" class="align-middle">
-          <td class="text-center">
-            <img :src=getImageBySku(summary.sku) loading="lazy" class="img-thumbnail"
+          <td class="text-end py-0 d-print-none">
+            <img :src=getImageBySku(summary.sku) loading="lazy" height="32" class="rounded"
                  :alt="summary.title">
           </td>
-          <td>
+          <td class="border-end">
             {{ summary.title }}
           </td>
-          <td>
+          <td class="border-end">
             <span class="text-secondary">{{ summary.sku }}</span>
           </td>
-          <td class="text-center border-start border-end">
+          <td class="border-end text-center">
             {{ summary.quantity }}
           </td>
           <td>
@@ -108,8 +108,9 @@ export default defineComponent({
           this.lines = this.toOrderLineSummaries(orders);
         });
     },
-    getImageBySku(sku: string): string | undefined {
-      return this.products.find(p => p.variants.find(v => v.sku == sku) != undefined)?.imgUrl;
+    getImageBySku(sku: string): string {
+      return this.products.find(p => p.variants.find(v => v.sku == sku) != undefined)?.imgUrl ??
+          "https://cdn.shopify.com/s/files/1/0276/3902/1652/files/FantastiskeFroe_logo_mini_32x32.png?v=1583103209";
     },
     toOrderLineSummaries(orders: OrderDTO[]): OrderLineSummary[] {
       // Extract lines
