@@ -110,7 +110,7 @@ export default defineComponent({
                   .map(toOrderLineSummary)
                   .reduce(combineSummaries)
           )
-          .sort(summaryCompareSku);
+          .sort((a, b) => a.title.localeCompare(b.title));
 
       function orderLineFromDTO(order: OrderDTO, line: OrderLineDTO): OrderLine {
         return {
@@ -147,10 +147,6 @@ export default defineComponent({
           quantity: acc.quantity + other.quantity,
           orderNumbers: acc.orderNumbers.concat(other.orderNumbers).sort()
         };
-      }
-
-      function summaryCompareSku(a: OrderLineSummary, b: OrderLineSummary): number {
-        return a.sku.localeCompare(b.sku);
       }
     }
   },
