@@ -75,7 +75,6 @@ export default defineComponent({
       if (this.filter.trim().length == 0) return this.lines;
       try {
         const filterRegex = RegExp(this.filter, 'i');
-        console.log(filterRegex);
         return this.lines.filter(l => filterRegex.test(l.sku));
       } catch {
         return [];
