@@ -1,4 +1,6 @@
 <template>
+  <OrderModal :order="selectedOrder"></OrderModal>
+
   <div class="container">
     <div class="row my-3">
       <h1 class="display-4">Solgt Lager</h1>
@@ -31,9 +33,10 @@
             {{ summary.quantity }}
           </td>
           <td>
-            <span v-for="orderName in summary.orderNames" v-bind:key="orderName">
-                <OrderView :order="orders[orderName]"></OrderView>
-            </span>
+            <a href="#" v-for="order in summary.orders" v-bind:key="order.number" @click="selectedOrder = order"
+                  data-bs-toggle="modal" data-bs-target="#orderModal" class="me-1">
+              {{ order.name }}
+            </a>
           </td>
         </tr>
         </tbody>
@@ -60,38 +63,38 @@ import { FulfillmentStatus, type OrderDTO, type OrderLineDTO } from '@/api/shopi
 import { defineComponent } from 'vue';
 import type { Product } from '@/types/product';
 import ProductsService from '@/util/products-service';
-import OrderView from '@/components/OrderView.vue';
+import OrderModal from '@/components/OrderModal.vue';
 
 interface OrderLine {
   sku: string;
   title: string;
   quantity: number;
-  orderName: string;
+  order: OrderDTO;
 }
 
 interface OrderLineSummary {
   sku: string;
   title: string;
   quantity: number;
-  orderNames: string[];
+  orders: OrderDTO[];
 }
 
 export default defineComponent({
-  components: { OrderView },
+  components: { OrderModal },
   data() {
     return {
-      orders: {} as Record<string, OrderDTO>,
-      lines: [] as OrderLineSummary[],
+      orderLineSummaries: [] as OrderLineSummary[],
+      selectedOrder: undefined as OrderDTO | undefined,
       filter: '^[^F]' as string,
       products: [] as Product[]
     };
   },
   computed: {
     filteredOrderLineSummaries(): OrderLineSummary[] {
-      if (this.filter.trim().length == 0) return this.lines;
+      if (this.filter.trim().length == 0) return this.orderLineSummaries;
       try {
         const filterRegex = RegExp(this.filter, 'i');
-        return this.lines.filter(l => filterRegex.test(l.sku));
+        return this.orderLineSummaries.filter(l => filterRegex.test(l.sku));
       } catch {
         return [];
       }
@@ -104,16 +107,16 @@ export default defineComponent({
       });
       OrdersApi.ordersGet({ fulfillmentStatus: FulfillmentStatus.Null })
         .subscribe((orders: OrderDTO[]) => {
-          orders.forEach((order) => this.orders[order.name] = order);
-          this.lines = this.toOrderLineSummaries(orders);
+          this.orderLineSummaries = this.toOrderLineSummaries(orders);
         });
     },
     getImageBySku(sku: string): string {
-      return this.products.find(p => p.variants.find(v => v.sku == sku) != undefined)?.imgUrl ??
+      return this.products
+        .find(p => p.variants.some(v => v.sku == sku))?.imgUrl ??
           "https://cdn.shopify.com/s/files/1/0276/3902/1652/files/FantastiskeFroe_logo_mini_32x32.png?v=1583103209";
     },
     toOrderLineSummaries(orders: OrderDTO[]): OrderLineSummary[] {
-      // Extract lines
+      // Extract order lines
       const orderLines: OrderLine[] = orders
         .flatMap((order: OrderDTO) => order.line_items
           .map((line: OrderLineDTO) => orderLineFromDTO(order, line)));
@@ -135,7 +138,7 @@ export default defineComponent({
           sku: line.sku,
           title: line.title,
           quantity: line.quantity ?? 0,
-          orderName: order.name
+          order: order
         };
       }
 
@@ -154,7 +157,7 @@ export default defineComponent({
           sku: orderLine.sku,
           quantity: orderLine.quantity,
           title: orderLine.title,
-          orderNames: [orderLine.orderName]
+          orders: [orderLine.order]
         };
       }
 
@@ -163,7 +166,7 @@ export default defineComponent({
           sku: acc.sku,
           title: acc.title,
           quantity: acc.quantity + other.quantity,
-          orderNames: acc.orderNames.concat(other.orderNames).sort()
+          orders: acc.orders.concat(other.orders).sort((a, b) => a.name.localeCompare(b.name))
         };
       }
     }
