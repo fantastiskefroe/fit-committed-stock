@@ -10,7 +10,7 @@
         </div>
         <div class="modal-body">
           <p>
-            Bestilt d. {{ new Date(Date.parse(order?.created_at)).toLocaleString() }}
+            Bestilt d. {{ new Date(Date.parse(order?.created_at ?? "")).toLocaleString() }}
           </p>
           <p>
             Ordre på <a :href="`https://fantastiske-fro.myshopify.com/admin/orders/${order?.shopify_id}`">Shopify</a>
