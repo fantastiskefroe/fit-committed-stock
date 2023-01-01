@@ -28,7 +28,7 @@
     </div>
   </div>
 
-  <div class="sticky-bottom container bg-white py-3 border border-bottom-0 rounded-top">
+  <div class="sticky-bottom container bg-white py-3 border border-bottom-0 rounded-top d-print-none">
     <div class="row">
       <div class="col input-group">
         <span class="input-group-text">Filter</span><input class="form-control" type="text" v-model="filter">
