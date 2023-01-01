@@ -16,12 +16,25 @@
         </tr>
         </thead>
         <tbody>
-        <tr v-for="item in filteredLines" v-bind:key="item.sku" class="align-middle">
-          <td class="text-center"><img :src=getImageByLine(item) loading="lazy" class="rounded-1 border"></td>
-          <td>{{ item.title }}</td>
-          <td><span class="text-secondary">{{ item.sku }}</span></td>
-          <td class="text-center border-start border-end">{{ item.quantity }}</td>
-          <td>{{ item.orderNumbers.join(', ') }}</td>
+        <tr v-for="summary in filteredOrderLineSummaries" v-bind:key="summary.sku" class="align-middle">
+          <td class="text-center">
+            <img :src=getImageBySku(summary.sku) loading="lazy" class="img-thumbnail"
+                 :alt="summary.title">
+          </td>
+          <td>
+            {{ summary.title }}
+          </td>
+          <td>
+            <span class="text-secondary">{{ summary.sku }}</span>
+          </td>
+          <td class="text-center border-start border-end">
+            {{ summary.quantity }}
+          </td>
+          <td>
+            <span v-for="orderName in summary.orderNames" v-bind:key="orderName">
+                <OrderView :order="orders[orderName]"></OrderView>
+            </span>
+          </td>
         </tr>
         </tbody>
       </table>
@@ -34,7 +47,7 @@
         <span class="input-group-text">Filter</span><input class="form-control" type="text" v-model="filter">
       </div>
       <div class="col text-end">
-        <span>{{ filteredLines.length }} produkter</span>
+        <span>{{ filteredOrderLineSummaries.length }} produkter</span>
       </div>
     </div>
   </div>
@@ -45,33 +58,36 @@
 import { OrdersApi } from '@/util/api';
 import { FulfillmentStatus, type OrderDTO, type OrderLineDTO } from '@/api/shopify-data';
 import { defineComponent } from 'vue';
-import ProductsService from "@/util/products-service";
-import type {Product} from "@/types/product";
+import type { Product } from '@/types/product';
+import ProductsService from '@/util/products-service';
+import OrderView from '@/components/OrderView.vue';
 
 interface OrderLine {
   sku: string;
   title: string;
   quantity: number;
-  orderNumber: string;
+  orderName: string;
 }
 
 interface OrderLineSummary {
   sku: string;
   title: string;
   quantity: number;
-  orderNumbers: string[];
+  orderNames: string[];
 }
 
 export default defineComponent({
+  components: { OrderView },
   data() {
     return {
+      orders: {} as Record<string, OrderDTO>,
       lines: [] as OrderLineSummary[],
       filter: '^[^F]' as string,
       products: [] as Product[]
     };
   },
   computed: {
-    filteredLines(): OrderLineSummary[] {
+    filteredOrderLineSummaries(): OrderLineSummary[] {
       if (this.filter.trim().length == 0) return this.lines;
       try {
         const filterRegex = RegExp(this.filter, 'i');
@@ -84,40 +100,41 @@ export default defineComponent({
   methods: {
     fetchOrders(): void {
       ProductsService.getAll().then(products => {
-        this.products = products
+        this.products = products;
       });
       OrdersApi.ordersGet({ fulfillmentStatus: FulfillmentStatus.Null })
-          .subscribe((orders: OrderDTO[]) => {
-            this.lines = this.toOrderLineSummaries(orders);
-          });
+        .subscribe((orders: OrderDTO[]) => {
+          orders.forEach((order) => this.orders[order.name] = order);
+          this.lines = this.toOrderLineSummaries(orders);
+        });
     },
-    getImageByLine(line: OrderLineSummary) : string | undefined {
-      return this.products.find(p => p.variants.findIndex(v => v.sku == line.sku) != -1)?.imgUrl;
+    getImageBySku(sku: string): string | undefined {
+      return this.products.find(p => p.variants.find(v => v.sku == sku) != undefined)?.imgUrl;
     },
     toOrderLineSummaries(orders: OrderDTO[]): OrderLineSummary[] {
       // Extract lines
       const orderLines: OrderLine[] = orders
-          .flatMap((order: OrderDTO) => order.line_items
-              .map((line: OrderLineDTO) => orderLineFromDTO(order, line)));
+        .flatMap((order: OrderDTO) => order.line_items
+          .map((line: OrderLineDTO) => orderLineFromDTO(order, line)));
 
       // Group by sku
       const orderLinesBySku = groupBy(orderLines, line => line.sku);
 
       // Combine to OrderLineSummaries
       return Array.from(orderLinesBySku.values())
-          .flatMap((orderLines) =>
-              orderLines
-                  .map(toOrderLineSummary)
-                  .reduce(combineSummaries)
-          )
-          .sort((a, b) => a.title.localeCompare(b.title));
+        .flatMap((orderLines) =>
+          orderLines
+            .map(toOrderLineSummary)
+            .reduce(combineSummaries)
+        )
+        .sort((a, b) => a.title.localeCompare(b.title));
 
       function orderLineFromDTO(order: OrderDTO, line: OrderLineDTO): OrderLine {
         return {
           sku: line.sku,
           title: line.title,
           quantity: line.quantity ?? 0,
-          orderNumber: order.name
+          orderName: order.name
         };
       }
 
@@ -136,7 +153,7 @@ export default defineComponent({
           sku: orderLine.sku,
           quantity: orderLine.quantity,
           title: orderLine.title,
-          orderNumbers: [orderLine.orderNumber]
+          orderNames: [orderLine.orderName]
         };
       }
 
@@ -145,7 +162,7 @@ export default defineComponent({
           sku: acc.sku,
           title: acc.title,
           quantity: acc.quantity + other.quantity,
-          orderNumbers: acc.orderNumbers.concat(other.orderNumbers).sort()
+          orderNames: acc.orderNames.concat(other.orderNames).sort()
         };
       }
     }
