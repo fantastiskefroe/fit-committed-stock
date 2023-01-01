@@ -47,6 +47,7 @@ import { FulfillmentStatus, type OrderDTO, type OrderLineDTO } from '@/api/shopi
 import { defineComponent } from 'vue';
 import ProductsService from "@/util/products-service";
 import type {Product} from "@/types/product";
+import * as process from "process";
 
 interface OrderLine {
   sku: string;
@@ -91,6 +92,9 @@ export default defineComponent({
           .subscribe((orders: OrderDTO[]) => {
             this.lines = this.toOrderLineSummaries(orders);
           });
+    },
+    getImageByLine(line: OrderLineSummary) : string | undefined {
+      return this.products.find(p => p.variants.findIndex(v => v.sku == line.sku) != -1)?.imgUrl;
     },
     toOrderLineSummaries(orders: OrderDTO[]): OrderLineSummary[] {
       // Extract lines
