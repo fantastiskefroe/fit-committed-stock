@@ -18,11 +18,9 @@ export default {
 }
 
 async function fetchAll(): Promise<Product[]> {
-    const data = await fetch('https://products.it.fantastiskefroe.dk/products')
+    return fetch('https://products.it.fantastiskefroe.dk/products')
         .then(value => value.json())
-        .then((data: ProductDTO[]) => data);
-
-    return Promise.resolve(data.map(toProduct));
+        .then((data : ProductDTO[]) => data.map(toProduct))
 }
 
 function toProduct(source: ProductDTO): Product {
@@ -34,7 +32,12 @@ function toProduct(source: ProductDTO): Product {
         });
 
     return {
-        id: source.id, title: source.title, url: source.url, imgUrl: source.imageUrl, variants: variants
+        id: source.id,
+        title: source.title,
+        url: source.url,
+        imgUrl: source.imageUrl,
+        variants: variants,
+        tags: source.tags
     };
 }
 

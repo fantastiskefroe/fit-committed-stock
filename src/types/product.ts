@@ -6,4 +6,5 @@ export interface Product {
     url: string;
     imgUrl: string;
     variants: Variant[];
+    tags: string[];
 }

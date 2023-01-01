@@ -7,4 +7,5 @@ export interface ProductDTO {
     url: string;
     imageUrl: string;
     variants: VariantDTO[];
+    tags: string[];
 }
