@@ -47,7 +47,6 @@ import { FulfillmentStatus, type OrderDTO, type OrderLineDTO } from '@/api/shopi
 import { defineComponent } from 'vue';
 import ProductsService from "@/util/products-service";
 import type {Product} from "@/types/product";
-import * as process from "process";
 
 interface OrderLine {
   sku: string;
