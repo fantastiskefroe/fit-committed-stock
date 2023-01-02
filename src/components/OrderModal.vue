@@ -13,10 +13,11 @@
             Bestilt d. {{ new Date(Date.parse(order?.created_at ?? "")).toLocaleString() }}
           </p>
           <p>
-            Ordre på <a :href="`https://fantastiske-fro.myshopify.com/admin/orders/${order?.shopify_id}`">Shopify</a>
+            Ordren på <a :href="`https://fantastiske-fro.myshopify.com/admin/orders/${order?.shopify_id}`" target="_blank">Shopify</a>
           </p>
           <p>
             Betalingsstatus: {{ order?.financial_status }}
+            <br>
             Klargøringsstatus: {{ order?.fulfillment_status }}
           </p>
           <p>
