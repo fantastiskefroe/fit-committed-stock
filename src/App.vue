@@ -106,7 +106,7 @@ export default defineComponent({
       filter: {
         skuRegex: '',
         fulfillmentType: FulfillmentStatus.Null,
-        tag: ''
+        tag: 'stalden'
       },
       products: [] as Product[]
     };
