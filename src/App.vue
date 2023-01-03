@@ -6,35 +6,35 @@
       <h1 class="display-4">Solgt Lager</h1>
     </div>
 
-    <div class="row mb-3 justify-content-center">
-      <table class="table table-borderless">
-        <thead class="fw-bold border-bottom sticky-top bg-white">
+    <div class="row mb-5">
+      <table class="table table-striped">
+        <thead class="sticky-top bg-white">
         <tr>
           <th class="d-print-none"></th>
-          <th class="border-end">Titel</th>
-          <th class="border-end">SKU</th>
-          <th class="text-center border-end">Antal</th>
+          <th>Titel</th>
+          <th class="text-center">Antal</th>
           <th>Ordrer</th>
         </tr>
         </thead>
-        <tbody>
+        <tbody class="table-group-divider">
         <tr v-for="summary in filteredOrderLineSummaries" v-bind:key="summary.sku" class="align-middle">
-          <td class="text-end py-0 d-print-none">
-            <img :src=getImageBySku(summary.sku) loading="lazy" height="32" class="rounded"
+          <td class="text-center d-print-none">
+            <img :src=getImageBySku(summary.sku) loading="lazy" class="img-thumbnail"
                  :alt="summary.title">
           </td>
-          <td class="border-end">
+          <td>
             {{ summary.title }}
+            <br>
+            <span class="text-secondary">
+              {{ summary.sku }}
+            </span>
           </td>
-          <td class="border-end">
-            <span class="text-secondary">{{ summary.sku }}</span>
-          </td>
-          <td class="border-end text-center">
+          <td class="text-center">
             {{ summary.quantity }}
           </td>
           <td>
             <a href="#" v-for="order in summary.orders" v-bind:key="order.number" @click="selectedOrder = order"
-                  data-bs-toggle="modal" data-bs-target="#orderModal" class="me-1">
+               data-bs-toggle="modal" data-bs-target="#orderModal" class="link-primary me-1">
               {{ order.name }}
             </a>
           </td>
@@ -53,7 +53,10 @@
       <div class="col input-group d-none">
         <span class="input-group-text">Status</span>
         <select class="form-select form-control" v-model="filter.fulfillmentType">
-          <option v-for="statusType in Object.values(FulfillmentStatus)" :value="statusType">{{ statusType }}</option>
+          <option v-for="statusType in Object.values(FulfillmentStatus)"
+                  v-bind:key="statusType" :value="statusType">
+            {{ statusType }}
+          </option>
         </select>
       </div>
       <div class="col input-group">
@@ -103,14 +106,14 @@ export default defineComponent({
       filter: {
         skuRegex: '',
         fulfillmentType: FulfillmentStatus.Null,
-        tag: 'stalden'
+        tag: ''
       },
       products: [] as Product[]
     };
   },
   computed: {
     FulfillmentStatus() {
-      return FulfillmentStatus
+      return FulfillmentStatus;
     },
     filteredOrderLineSummaries(): OrderLineSummary[] {
       function filterSku(filter: string): (summaries: OrderLineSummary[]) => OrderLineSummary[] {
@@ -122,24 +125,24 @@ export default defineComponent({
           } catch {
             return [];
           }
-        }
+        };
       }
 
       function filterTag(tag: string, products: Product[]): (summaries: OrderLineSummary[]) => OrderLineSummary[] {
         return (summaries: OrderLineSummary[]) => {
-          if(!tag) return summaries;
+          if (!tag) return summaries;
           return summaries.filter(s => {
             const product = products.find(p => p.variants.findIndex(v => v.sku === s.sku) !== -1);
             if (product === undefined) return false;
-            return product.tags.indexOf(tag) !== -1
+            return product.tags.indexOf(tag) !== -1;
           });
-        }
+        };
       }
 
       const filters = [
         filterSku(this.filter.skuRegex),
-        filterTag(this.filter.tag, this.products),
-      ]
+        filterTag(this.filter.tag, this.products)
+      ];
 
       return filters.reduce((lines, f) => f(lines), this.orderLineSummaries);
 
@@ -149,7 +152,7 @@ export default defineComponent({
     fetchOrders(): void {
       ProductsService.getAll().then(products => {
         this.products = products;
-        this.tags = Array.from(new Set(products.flatMap(p => p.tags))).sort()
+        this.tags = Array.from(new Set(products.flatMap(p => p.tags))).sort();
       });
       OrdersApi.ordersGet({ fulfillmentStatus: this.filter.fulfillmentType })
         .subscribe((orders: OrderDTO[]) => {
@@ -158,8 +161,8 @@ export default defineComponent({
     },
     getImageBySku(sku: string): string {
       return this.products
-        .find(p => p.variants.some(v => v.sku == sku))?.imgUrl ??
-          "https://cdn.shopify.com/s/files/1/0276/3902/1652/files/FantastiskeFroe_logo_mini_32x32.png?v=1583103209";
+          .find(p => p.variants.some(v => v.sku == sku))?.imgUrl ??
+        'https://cdn.shopify.com/s/files/1/0276/3902/1652/files/FantastiskeFroe_logo_mini_32x32.png?v=1583103209';
     },
     toOrderLineSummaries(orders: OrderDTO[]): OrderLineSummary[] {
       // Extract order lines
@@ -230,5 +233,14 @@ export default defineComponent({
 
 
 <style scoped lang="scss">
+.img-thumbnail {
+  height: 48px !important;
+}
 
+@media print {
+  a {
+    color: var(--bs-body-color) !important;
+    text-decoration: none !important;
+  }
+}
 </style>
