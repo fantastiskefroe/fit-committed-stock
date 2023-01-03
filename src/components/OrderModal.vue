@@ -21,12 +21,18 @@
             <br>
             Klargøringsstatus: {{ order?.fulfillment_status }}
           </p>
-          <p>
-            Ordrelinjer:
-          </p>
-          <ul>
-            <li v-for="orderLine in order?.line_items" v-bind:key="orderLine.sku">
-              {{ orderLine.title }} x {{ orderLine.quantity }}
+          <ul class="list-group list-group-flush">
+            <li v-for="orderLine in order?.line_items" v-bind:key="orderLine.sku"
+                class="list-group-item d-flex justify-content-between align-items-start">
+              <div class="ms-2 me-auto">
+                <div class="fw-bold">
+                  {{ orderLine.title }}
+                </div>
+                <span class="text-secondary">
+                  {{ orderLine.sku }}
+                </span>
+              </div>
+              <span class="badge text-bg-secondary">{{ orderLine.quantity }}</span>
             </li>
           </ul>
         </div>
