@@ -168,6 +168,7 @@ export default defineComponent({
       // Extract order lines
       const orderLines: OrderLine[] = orders
         .flatMap((order: OrderDTO) => order.line_items
+          .filter((line: OrderLineDTO) => line.refunded === false)
           .map((line: OrderLineDTO) => orderLineFromDTO(order, line)));
 
       // Group by sku
