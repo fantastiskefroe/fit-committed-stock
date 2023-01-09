@@ -4,7 +4,7 @@ import type {ProductDTO} from "@/types/productDTO";
 
 export default {
     async getAll(): Promise<Product[]> {
-        const maxCacheAge = 5 * 60 * 1000;
+        const maxCacheAge = 15 * 60 * 1000; // 15 min
         const data = loadFromCache();
 
         if (Date.now() - data.timestamp > maxCacheAge) {
