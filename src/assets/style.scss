@@ -7,6 +7,14 @@ $theme-colors: (
 
 @import 'node_modules/bootstrap/scss/bootstrap';
 
+.bi {
+  width: 1em;
+  height: 1em;
+  display: inline-block;
+  vertical-align: -0.125em;
+  fill: currentcolor;
+}
+
 // @import 'node_modules/bootstrap/scss/functions';
 // @import 'node_modules/bootstrap/scss/variables';
 // @import 'node_modules/bootstrap/scss/mixins';

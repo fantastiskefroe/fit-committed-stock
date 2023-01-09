@@ -1,12 +1,77 @@
 <template>
   <OrderModal :order="selectedOrder"></OrderModal>
 
-  <div class="container">
-    <div class="row my-3">
-      <h1 class="display-4">Solgt Lager</h1>
+  <div class="offcanvas offcanvas-end" data-bs-scroll="true" tabindex="-1" id="offcanvas">
+    <div class="offcanvas-header">
+      <h5 class="offcanvas-title">Filtre</h5>
+      <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
     </div>
 
-    <div class="row mb-5">
+    <div class="offcanvas-body d-flex flex-column justify-content-between">
+      <div class="container">
+        <div class="row">
+          <div class="col gy-3">
+            <label for="tagFilterInput" class="form-label">Tag</label>
+            <select id="tagFilterInput" class="form-select" v-model="filter.tag">
+              <option value="">Ingen filter</option>
+              <option v-for="tag in tags" v-bind:key="tag" :value="tag">{{ tag }}</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="row">
+          <div class="col gy-3">
+            <label for="skuFilterInput" class="form-label">SKU</label>
+            <input type="text" class="form-control" id="skuFilterInput" v-model="filter.skuRegex">
+          </div>
+        </div>
+
+        <div class="row">
+          <div class="col gy-3">
+            <label for="fulfillmentStatusFilterInput" class="form-label">Klargøringsstatus</label>
+            <select class="form-select form-control" v-model="filter.fulfillmentStatus">
+              <option v-for="statusType in Object.values(FulfillmentStatus)"
+                      v-bind:key="statusType" :value="statusType">
+                {{ statusType }}
+              </option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <div class="container">
+        <div class="row">
+          <div class="col text-center text-secondary">
+            <span>
+              {{ getTotalNumberOfProducts(filteredOrderLineSummaries) }}
+              produkter fordelt på {{ filteredOrderLineSummaries.length }}
+              unikke varenumre</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="container">
+    <div class="row my-3">
+      <div class="d-md-flex flex-md-row-reverse align-items-center justify-content-between">
+        <button class="btn btn-sm btn-bd-light mb-3 mb-md-0 rounded-2" type="button" data-bs-toggle="offcanvas"
+                data-bs-target="#offcanvas"
+                aria-controls="offcanvas">
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-gear"
+               viewBox="0 0 16 16">
+            <path
+              d="M8 4.754a3.246 3.246 0 1 0 0 6.492 3.246 3.246 0 0 0 0-6.492zM5.754 8a2.246 2.246 0 1 1 4.492 0 2.246 2.246 0 0 1-4.492 0z" />
+            <path
+              d="M9.796 1.343c-.527-1.79-3.065-1.79-3.592 0l-.094.319a.873.873 0 0 1-1.255.52l-.292-.16c-1.64-.892-3.433.902-2.54 2.541l.159.292a.873.873 0 0 1-.52 1.255l-.319.094c-1.79.527-1.79 3.065 0 3.592l.319.094a.873.873 0 0 1 .52 1.255l-.16.292c-.892 1.64.901 3.434 2.541 2.54l.292-.159a.873.873 0 0 1 1.255.52l.094.319c.527 1.79 3.065 1.79 3.592 0l.094-.319a.873.873 0 0 1 1.255-.52l.292.16c1.64.893 3.434-.902 2.54-2.541l-.159-.292a.873.873 0 0 1 .52-1.255l.319-.094c1.79-.527 1.79-3.065 0-3.592l-.319-.094a.873.873 0 0 1-.52-1.255l.16-.292c.893-1.64-.902-3.433-2.541-2.54l-.292.159a.873.873 0 0 1-1.255-.52l-.094-.319zm-2.633.283c.246-.835 1.428-.835 1.674 0l.094.319a1.873 1.873 0 0 0 2.693 1.115l.291-.16c.764-.415 1.6.42 1.184 1.185l-.159.292a1.873 1.873 0 0 0 1.116 2.692l.318.094c.835.246.835 1.428 0 1.674l-.319.094a1.873 1.873 0 0 0-1.115 2.693l.16.291c.415.764-.42 1.6-1.185 1.184l-.291-.159a1.873 1.873 0 0 0-2.693 1.116l-.094.318c-.246.835-1.428.835-1.674 0l-.094-.319a1.873 1.873 0 0 0-2.692-1.115l-.292.16c-.764.415-1.6-.42-1.184-1.185l.159-.291A1.873 1.873 0 0 0 1.945 8.93l-.319-.094c-.835-.246-.835-1.428 0-1.674l.319-.094A1.873 1.873 0 0 0 3.06 4.377l-.16-.292c-.415-.764.42-1.6 1.185-1.184l.292.159a1.873 1.873 0 0 0 2.692-1.115l.094-.319z" />
+          </svg>
+          Indstillinger
+        </button>
+        <h1 class="display-4">Solgt Lager</h1>
+      </div>
+    </div>
+
+    <div class="row">
       <table class="table table-striped">
         <thead class="sticky-top bg-white">
         <tr>
@@ -43,40 +108,11 @@
       </table>
     </div>
   </div>
-
-  <div class="fixed-bottom container bg-white py-3 border border-bottom-0 rounded-top d-print-none">
-    <div class="row">
-      <div class="col input-group d-none">
-        <span class="input-group-text">SKU filter</span>
-        <input class="form-control" type="text" v-model="filter.skuRegex">
-      </div>
-      <div class="col input-group d-none">
-        <span class="input-group-text">Status</span>
-        <select class="form-select form-control" v-model="filter.fulfillmentType">
-          <option v-for="statusType in Object.values(FulfillmentStatus)"
-                  v-bind:key="statusType" :value="statusType">
-            {{ statusType }}
-          </option>
-        </select>
-      </div>
-      <div class="col input-group">
-        <span class="input-group-text">Tag</span>
-        <select class="form-select form-control" v-model="filter.tag">
-          <option value="">Ingen filter</option>
-          <option v-for="tag in tags" v-bind:key="tag" :value="tag">{{ tag }}</option>
-        </select>
-      </div>
-      <div class="col text-end">
-        <span>{{ filteredOrderLineSummaries.length }} produkter</span>
-      </div>
-    </div>
-  </div>
-
 </template>
 
 <script lang="ts">
 import { OrdersApi } from '@/util/api';
-import { FulfillmentStatus, type OrderDTO, type OrderLineDTO } from '@/api/shopify-data';
+import { CancelReason, FulfillmentStatus, type OrderDTO, type OrderLineDTO } from '@/api/shopify-data';
 import { defineComponent } from 'vue';
 import type { Product } from '@/types/product';
 import ProductsService from '@/util/products-service';
@@ -105,7 +141,7 @@ export default defineComponent({
       tags: [] as string[],
       filter: {
         skuRegex: '',
-        fulfillmentType: FulfillmentStatus.Null,
+        fulfillmentStatus: FulfillmentStatus.Null,
         tag: 'stalden'
       },
       products: [] as Product[]
@@ -154,7 +190,7 @@ export default defineComponent({
         this.products = products;
         this.tags = Array.from(new Set(products.flatMap(p => p.tags))).sort();
       });
-      OrdersApi.ordersGet({ fulfillmentStatus: this.filter.fulfillmentType })
+      OrdersApi.ordersGet({ fulfillmentStatus: this.filter.fulfillmentStatus })
         .subscribe((orders: OrderDTO[]) => {
           this.orderLineSummaries = this.toOrderLineSummaries(orders);
         });
@@ -167,6 +203,7 @@ export default defineComponent({
     toOrderLineSummaries(orders: OrderDTO[]): OrderLineSummary[] {
       // Extract order lines
       const orderLines: OrderLine[] = orders
+        .filter((order: OrderDTO) => order.cancel_reason === CancelReason.Null)
         .flatMap((order: OrderDTO) => order.line_items
           .filter((line: OrderLineDTO) => line.refunded === false)
           .map((line: OrderLineDTO) => orderLineFromDTO(order, line)));
@@ -219,10 +256,14 @@ export default defineComponent({
           orders: acc.orders.concat(other.orders).sort((a, b) => a.name.localeCompare(b.name))
         };
       }
+    },
+    getTotalNumberOfProducts(orderLineSummaries: OrderLineSummary[]): number {
+      return orderLineSummaries
+        .reduce((acc: number, current: OrderLineSummary) => acc + (current.quantity ?? 0), 0);
     }
   },
   watch: {
-    'filter.fulfillmentType'(newVal: FulfillmentStatus) {
+    'filter.fulfillmentStatus'() {
       this.fetchOrders();
     }
   },
