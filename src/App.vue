@@ -195,8 +195,8 @@ export default defineComponent({
 
       return [{
         date: earliestOrderDateTime,
-        type: 'dot',
-        tooltip: [{ text: `Tidligste ordre (${this.earliestOrder.name})`, color: 'green' }]
+        type: 'line' as 'line',
+        tooltip: [{ text: `Tidligste ordre (${this.earliestOrder.name})` }]
       }];
     },
     FulfillmentStatus() {
