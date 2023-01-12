@@ -1,7 +1,7 @@
 <template>
   <OrderModal :order="selectedOrder"></OrderModal>
 
-  <div class="offcanvas offcanvas-end" data-bs-scroll="true" tabindex="-1" id="offcanvas">
+  <div class="offcanvas offcanvas-end show" data-bs-scroll="true" tabindex="-1" id="offcanvas">
     <div class="offcanvas-header">
       <h5 class="offcanvas-title">Filtre</h5>
       <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
@@ -29,12 +29,22 @@
         <div class="row">
           <div class="col gy-3">
             <label for="fulfillmentStatusFilterInput" class="form-label">Klargøringsstatus</label>
-            <select class="form-select form-control" v-model="filter.fulfillmentStatus">
+            <select class="form-select form-control" id="fulfillmentStatusFilterInput"
+                    v-model="filter.fulfillmentStatus">
               <option v-for="statusType in Object.values(FulfillmentStatus)"
                       v-bind:key="statusType" :value="statusType">
                 {{ statusType }}
               </option>
             </select>
+          </div>
+        </div>
+
+        <div class="row">
+          <div class="col gy-3">
+            <label for="dateRangeFilterInput" class="form-label">Tidspunkt</label>
+            <Datepicker id="dateRangeFilterInput" v-model="filter.dateRange" auto-apply :clearable="false"
+                        :enable-time-picker="false" :preset-ranges="presetRanges" :markers="calendarMarkers"
+                        range />
           </div>
         </div>
       </div>
@@ -98,10 +108,12 @@
             {{ summary.quantity }}
           </td>
           <td>
-            <a href="#" v-for="order in summary.orders" v-bind:key="order.number" @click="selectedOrder = order"
-               data-bs-toggle="modal" data-bs-target="#orderModal" class="link-primary me-1">
-              {{ order.name }}
-            </a>
+            <div>
+              <a href="#" v-for="order in summary.orders" v-bind:key="order.number" @click="selectedOrder = order"
+                 data-bs-toggle="modal" data-bs-target="#orderModal" class="link-primary me-1">
+                {{ order.name }}
+              </a>
+            </div>
           </td>
         </tr>
         </tbody>
@@ -117,6 +129,15 @@ import { defineComponent } from 'vue';
 import type { Product } from '@/types/product';
 import ProductsService from '@/util/products-service';
 import OrderModal from '@/components/OrderModal.vue';
+import Datepicker from '@vuepic/vue-datepicker';
+import '@vuepic/vue-datepicker/dist/main.css';
+import addDays from 'date-fns/addDays';
+import addMonths from 'date-fns/addMonths';
+import startOfMonth from 'date-fns/startOfMonth';
+import endOfMonth from 'date-fns/endOfMonth';
+import startOfYear from 'date-fns/startOfYear';
+import endOfYear from 'date-fns/endOfYear';
+import differenceInDays from 'date-fns/differenceInDays';
 
 interface OrderLine {
   sku: string;
@@ -133,21 +154,51 @@ interface OrderLineSummary {
 }
 
 export default defineComponent({
-  components: { OrderModal },
+  components: { OrderModal, Datepicker },
   data() {
     return {
-      orderLineSummaries: [] as OrderLineSummary[],
-      selectedOrder: undefined as OrderDTO | undefined,
+      products: [] as Product[],
       tags: [] as string[],
+
+      orderLineSummaries: [] as OrderLineSummary[],
+      earliestOrder: undefined as OrderDTO | undefined,
+      selectedOrder: undefined as OrderDTO | undefined,
+
       filter: {
-        skuRegex: '',
         fulfillmentStatus: FulfillmentStatus.Null,
+        dateRange: [addDays(new Date(), -7), new Date()],
+        skuRegex: '',
         tag: 'stalden'
       },
-      products: [] as Product[]
+      presetRanges: [
+        { label: 'I dag', range: [new Date(), new Date()] },
+        { label: 'Denne måned', range: [startOfMonth(new Date()), endOfMonth(new Date())] },
+        {
+          label: 'Sidste måned',
+          range: [startOfMonth(addMonths(new Date(), -1)), endOfMonth(addMonths(new Date(), -1))]
+        },
+        { label: 'I år', range: [startOfYear(new Date()), endOfYear(new Date())] }
+      ]
     };
   },
   computed: {
+    calendarMarkers() {
+      if (this.earliestOrder == null) {
+        return [];
+      }
+
+      const earliestOrderDateTime = new Date(this.earliestOrder.created_at);
+      const daysBetween = differenceInDays(earliestOrderDateTime, this.filter.dateRange[0]);
+      if (daysBetween <= 1) {
+        return [];
+      }
+
+      return [{
+        date: earliestOrderDateTime,
+        type: 'dot',
+        tooltip: [{ text: `Tidligste ordre (${this.earliestOrder.name})`, color: 'green' }]
+      }];
+    },
     FulfillmentStatus() {
       return FulfillmentStatus;
     },
@@ -190,9 +241,12 @@ export default defineComponent({
         this.products = products;
         this.tags = Array.from(new Set(products.flatMap(p => p.tags))).sort();
       });
-      OrdersApi.ordersGet({ fulfillmentStatus: this.filter.fulfillmentStatus })
+      const from = new Date(this.filter.dateRange[0].setHours(0, 0, 0, 0)).toISOString();
+      const to = new Date(addDays(this.filter.dateRange[1], 1).setHours(0, 0, 0, 0)).toISOString();
+      OrdersApi.ordersGet({ from, to, fulfillmentStatus: this.filter.fulfillmentStatus })
         .subscribe((orders: OrderDTO[]) => {
           this.orderLineSummaries = this.toOrderLineSummaries(orders);
+          this.earliestOrder = orders.sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime())[0];
         });
     },
     getImageBySku(sku: string): string {
@@ -264,6 +318,9 @@ export default defineComponent({
   },
   watch: {
     'filter.fulfillmentStatus'() {
+      this.fetchOrders();
+    },
+    'filter.dateRange'() {
       this.fetchOrders();
     }
   },
