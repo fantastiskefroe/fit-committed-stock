@@ -42,9 +42,11 @@
         <div class="row">
           <div class="col gy-3">
             <label for="dateRangeFilterInput" class="form-label">Tidspunkt</label>
-            <Datepicker id="dateRangeFilterInput" v-model="filter.dateRange" auto-apply :clearable="false"
-                        :enable-time-picker="false" :preset-ranges="presetRanges" :markers="calendarMarkers"
-                        range />
+            <Datepicker id="dateRangeFilterInput" v-model="filter.dateRange" auto-apply
+                        :close-on-auto-apply="false" :clearable="false"
+                        :enable-time-picker="false" :preset-ranges="presetRanges"
+                        :markers="calendarMarkers"
+                        range/>
           </div>
         </div>
       </div>
@@ -66,15 +68,17 @@
   <div class="container">
     <div class="row my-3">
       <div class="d-md-flex flex-md-row-reverse align-items-center justify-content-between">
-        <button class="btn btn-sm btn-bd-light mb-3 mb-md-0 rounded-2" type="button" data-bs-toggle="offcanvas"
+        <button class="btn btn-sm btn-bd-light mb-3 mb-md-0 rounded-2" type="button"
+                data-bs-toggle="offcanvas"
                 data-bs-target="#offcanvas"
                 aria-controls="offcanvas">
-          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-gear"
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor"
+               class="bi bi-gear"
                viewBox="0 0 16 16">
             <path
-              d="M8 4.754a3.246 3.246 0 1 0 0 6.492 3.246 3.246 0 0 0 0-6.492zM5.754 8a2.246 2.246 0 1 1 4.492 0 2.246 2.246 0 0 1-4.492 0z" />
+                d="M8 4.754a3.246 3.246 0 1 0 0 6.492 3.246 3.246 0 0 0 0-6.492zM5.754 8a2.246 2.246 0 1 1 4.492 0 2.246 2.246 0 0 1-4.492 0z"/>
             <path
-              d="M9.796 1.343c-.527-1.79-3.065-1.79-3.592 0l-.094.319a.873.873 0 0 1-1.255.52l-.292-.16c-1.64-.892-3.433.902-2.54 2.541l.159.292a.873.873 0 0 1-.52 1.255l-.319.094c-1.79.527-1.79 3.065 0 3.592l.319.094a.873.873 0 0 1 .52 1.255l-.16.292c-.892 1.64.901 3.434 2.541 2.54l.292-.159a.873.873 0 0 1 1.255.52l.094.319c.527 1.79 3.065 1.79 3.592 0l.094-.319a.873.873 0 0 1 1.255-.52l.292.16c1.64.893 3.434-.902 2.54-2.541l-.159-.292a.873.873 0 0 1 .52-1.255l.319-.094c1.79-.527 1.79-3.065 0-3.592l-.319-.094a.873.873 0 0 1-.52-1.255l.16-.292c.893-1.64-.902-3.433-2.541-2.54l-.292.159a.873.873 0 0 1-1.255-.52l-.094-.319zm-2.633.283c.246-.835 1.428-.835 1.674 0l.094.319a1.873 1.873 0 0 0 2.693 1.115l.291-.16c.764-.415 1.6.42 1.184 1.185l-.159.292a1.873 1.873 0 0 0 1.116 2.692l.318.094c.835.246.835 1.428 0 1.674l-.319.094a1.873 1.873 0 0 0-1.115 2.693l.16.291c.415.764-.42 1.6-1.185 1.184l-.291-.159a1.873 1.873 0 0 0-2.693 1.116l-.094.318c-.246.835-1.428.835-1.674 0l-.094-.319a1.873 1.873 0 0 0-2.692-1.115l-.292.16c-.764.415-1.6-.42-1.184-1.185l.159-.291A1.873 1.873 0 0 0 1.945 8.93l-.319-.094c-.835-.246-.835-1.428 0-1.674l.319-.094A1.873 1.873 0 0 0 3.06 4.377l-.16-.292c-.415-.764.42-1.6 1.185-1.184l.292.159a1.873 1.873 0 0 0 2.692-1.115l.094-.319z" />
+                d="M9.796 1.343c-.527-1.79-3.065-1.79-3.592 0l-.094.319a.873.873 0 0 1-1.255.52l-.292-.16c-1.64-.892-3.433.902-2.54 2.541l.159.292a.873.873 0 0 1-.52 1.255l-.319.094c-1.79.527-1.79 3.065 0 3.592l.319.094a.873.873 0 0 1 .52 1.255l-.16.292c-.892 1.64.901 3.434 2.541 2.54l.292-.159a.873.873 0 0 1 1.255.52l.094.319c.527 1.79 3.065 1.79 3.592 0l.094-.319a.873.873 0 0 1 1.255-.52l.292.16c1.64.893 3.434-.902 2.54-2.541l-.159-.292a.873.873 0 0 1 .52-1.255l.319-.094c1.79-.527 1.79-3.065 0-3.592l-.319-.094a.873.873 0 0 1-.52-1.255l.16-.292c.893-1.64-.902-3.433-2.541-2.54l-.292.159a.873.873 0 0 1-1.255-.52l-.094-.319zm-2.633.283c.246-.835 1.428-.835 1.674 0l.094.319a1.873 1.873 0 0 0 2.693 1.115l.291-.16c.764-.415 1.6.42 1.184 1.185l-.159.292a1.873 1.873 0 0 0 1.116 2.692l.318.094c.835.246.835 1.428 0 1.674l-.319.094a1.873 1.873 0 0 0-1.115 2.693l.16.291c.415.764-.42 1.6-1.185 1.184l-.291-.159a1.873 1.873 0 0 0-2.693 1.116l-.094.318c-.246.835-1.428.835-1.674 0l-.094-.319a1.873 1.873 0 0 0-2.692-1.115l-.292.16c-.764.415-1.6-.42-1.184-1.185l.159-.291A1.873 1.873 0 0 0 1.945 8.93l-.319-.094c-.835-.246-.835-1.428 0-1.674l.319-.094A1.873 1.873 0 0 0 3.06 4.377l-.16-.292c-.415-.764.42-1.6 1.185-1.184l.292.159a1.873 1.873 0 0 0 2.692-1.115l.094-.319z"/>
           </svg>
           Indstillinger
         </button>
@@ -93,7 +97,8 @@
         </tr>
         </thead>
         <tbody class="table-group-divider">
-        <tr v-for="summary in filteredOrderLineSummaries" v-bind:key="summary.sku" class="align-middle">
+        <tr v-for="summary in filteredOrderLineSummaries" v-bind:key="summary.sku"
+            class="align-middle">
           <td class="text-center d-print-none">
             <img :src=getImageBySku(summary.sku) loading="lazy" class="img-thumbnail"
                  :alt="summary.title">
@@ -110,7 +115,8 @@
           </td>
           <td>
             <div>
-              <a href="#" v-for="order in summary.orders" v-bind:key="order.number" @click="selectedOrder = order"
+              <a href="#" v-for="order in summary.orders" v-bind:key="order.number"
+                 @click="selectedOrder = order"
                  data-bs-toggle="modal" data-bs-target="#orderModal" class="link-primary me-1">
                 {{ order.name }}
               </a>
@@ -156,8 +162,6 @@ export default defineComponent({
       tags: [] as string[],
 
       orderLineSummaries: [] as OrderLineSummary[],
-      earliestOrder: undefined as OrderDTO | undefined,
-      latestOrder: undefined as OrderDTO | undefined,
       selectedOrder: undefined as OrderDTO | undefined,
 
       filter: {
@@ -167,13 +171,13 @@ export default defineComponent({
         tag: 'stalden'
       },
       presetRanges: [
-        { label: 'I dag', range: [new Date(), new Date()] },
-        { label: 'Denne måned', range: [startOfMonth(new Date()), endOfMonth(new Date())] },
+        {label: 'I dag', range: [new Date(), new Date()]},
+        {label: 'Denne måned', range: [startOfMonth(new Date()), endOfMonth(new Date())]},
         {
           label: 'Sidste måned',
           range: [startOfMonth(subMonths(new Date(), 1)), endOfMonth(subMonths(new Date(), 1))]
         },
-        { label: 'I år', range: [startOfYear(new Date()), endOfYear(new Date())] }
+        {label: 'I år', range: [startOfYear(new Date()), endOfYear(new Date())]}
       ]
     };
   },
@@ -212,25 +216,57 @@ export default defineComponent({
 
       return filters.reduce((lines, f) => f(lines), this.orderLineSummaries);
     },
+    earliestOrder(): OrderDTO | undefined {
+      const ordersByDate = this.filteredOrderLineSummaries
+        .flatMap((orderLineSummary: OrderLineSummary) => orderLineSummary.orders)
+        .sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime());
+
+      return ordersByDate[0];
+    },
+    latestOrder(): OrderDTO | undefined {
+      const ordersByDate = this.filteredOrderLineSummaries
+      .flatMap((orderLineSummary: OrderLineSummary) => orderLineSummary.orders)
+      .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+
+      return ordersByDate[0];
+    },
     FulfillmentStatus() {
       return FulfillmentStatus;
     },
     calendarMarkers() {
-      if (this.earliestOrder === undefined) {
-        return [];
+      const result: {
+        date: Date | string;
+        type?: 'dot' | 'line';
+        tooltip?: { text?: string; html?: string; color?: string }[];
+        color?: string;
+      }[] = [];
+
+      if (this.earliestOrder !== undefined) {
+        const earliestOrderDateTime = new Date(this.earliestOrder.created_at);
+        const daysBetween = differenceInDays(earliestOrderDateTime, this.filter.dateRange[0]);
+        if (daysBetween > 0) {
+          result.push({
+            date: earliestOrderDateTime,
+            type: 'dot',
+            tooltip: [{text: `Tidligste ordre (${this.earliestOrder.name})`}]
+          });
+        }
       }
 
-      const earliestOrderDateTime = new Date(this.earliestOrder.created_at);
-      const daysBetween = differenceInDays(earliestOrderDateTime, this.filter.dateRange[0]);
-      if (daysBetween < 1) {
-        return [];
+      if (this.latestOrder !== undefined) {
+        const latestOrderDateTime = new Date(this.latestOrder.created_at);
+        const daysBetween = differenceInDays(latestOrderDateTime, this.filter.dateRange[1]);
+        if (daysBetween < 0) {
+          result.push({
+            date: latestOrderDateTime,
+            type: 'dot',
+            tooltip: [{text: `Seneste ordre (${this.latestOrder.name})`, color: 'green'}],
+            color: 'green'
+          });
+        }
       }
 
-      return [{
-        date: earliestOrderDateTime,
-        type: 'line' as 'line',
-        tooltip: [{ text: `Tidligste ordre (${this.earliestOrder.name})` }]
-      }];
+      return result;
     },
   },
   methods: {
@@ -247,10 +283,6 @@ export default defineComponent({
       OrdersApi.ordersGet(params)
         .subscribe((orders: OrderDTO[]) => {
           this.orderLineSummaries = this.toOrderLineSummaries(orders);
-
-          const ordersByDate = orders.sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime());
-          this.earliestOrder = ordersByDate[0];
-          this.latestOrder = ordersByDate[ordersByDate.length - 1];
         });
     },
     toOrderLineSummaries(orders: OrderDTO[]): OrderLineSummary[] {
