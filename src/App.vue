@@ -53,9 +53,10 @@
         <div class="row">
           <div class="col text-center text-secondary">
             <span>
-              {{ getTotalNumberOfProducts(filteredOrderLineSummaries) }}
-              produkter fordelt på {{ filteredOrderLineSummaries.length }}
-              unikke varenumre</span>
+              {{ plural(getTotalNumberOfOrders(filteredOrderLineSummaries), '{} ordre', '{} ordrer') }} |
+              {{ plural(getTotalNumberOfProducts(filteredOrderLineSummaries), '{} produkt', '{} produkter') }} |
+              {{ plural(filteredOrderLineSummaries.length, '{} unikt varenummer', '{} unikke varenumre') }}
+            </span>
           </div>
         </div>
       </div>
@@ -131,13 +132,7 @@ import ProductsService from '@/util/products-service';
 import OrderModal from '@/components/OrderModal.vue';
 import Datepicker from '@vuepic/vue-datepicker';
 import '@vuepic/vue-datepicker/dist/main.css';
-import addDays from 'date-fns/addDays';
-import addMonths from 'date-fns/addMonths';
-import startOfMonth from 'date-fns/startOfMonth';
-import endOfMonth from 'date-fns/endOfMonth';
-import startOfYear from 'date-fns/startOfYear';
-import endOfYear from 'date-fns/endOfYear';
-import differenceInDays from 'date-fns/differenceInDays';
+import {addDays, differenceInDays, endOfMonth, endOfYear, startOfDay, startOfMonth, startOfYear, subMonths} from 'date-fns'
 
 interface OrderLine {
   sku: string;
@@ -162,6 +157,7 @@ export default defineComponent({
 
       orderLineSummaries: [] as OrderLineSummary[],
       earliestOrder: undefined as OrderDTO | undefined,
+      latestOrder: undefined as OrderDTO | undefined,
       selectedOrder: undefined as OrderDTO | undefined,
 
       filter: {
@@ -175,33 +171,13 @@ export default defineComponent({
         { label: 'Denne måned', range: [startOfMonth(new Date()), endOfMonth(new Date())] },
         {
           label: 'Sidste måned',
-          range: [startOfMonth(addMonths(new Date(), -1)), endOfMonth(addMonths(new Date(), -1))]
+          range: [startOfMonth(subMonths(new Date(), 1)), endOfMonth(subMonths(new Date(), 1))]
         },
         { label: 'I år', range: [startOfYear(new Date()), endOfYear(new Date())] }
       ]
     };
   },
   computed: {
-    calendarMarkers() {
-      if (this.earliestOrder == null) {
-        return [];
-      }
-
-      const earliestOrderDateTime = new Date(this.earliestOrder.created_at);
-      const daysBetween = differenceInDays(earliestOrderDateTime, this.filter.dateRange[0]);
-      if (daysBetween <= 1) {
-        return [];
-      }
-
-      return [{
-        date: earliestOrderDateTime,
-        type: 'line' as 'line',
-        tooltip: [{ text: `Tidligste ordre (${this.earliestOrder.name})` }]
-      }];
-    },
-    FulfillmentStatus() {
-      return FulfillmentStatus;
-    },
     filteredOrderLineSummaries(): OrderLineSummary[] {
       function filterSku(filter: string): (summaries: OrderLineSummary[]) => OrderLineSummary[] {
         return (summaries: OrderLineSummary[]) => {
@@ -219,9 +195,12 @@ export default defineComponent({
         return (summaries: OrderLineSummary[]) => {
           if (!tag) return summaries;
           return summaries.filter(s => {
-            const product = products.find(p => p.variants.findIndex(v => v.sku === s.sku) !== -1);
-            if (product === undefined) return false;
-            return product.tags.indexOf(tag) !== -1;
+            const product: Product | undefined = products.find(p => p.variants.findIndex(v => v.sku === s.sku) !== -1);
+            if (product === undefined) {
+              return false;
+            }
+
+            return product.tags.includes(tag);
           });
         };
       }
@@ -232,8 +211,27 @@ export default defineComponent({
       ];
 
       return filters.reduce((lines, f) => f(lines), this.orderLineSummaries);
+    },
+    FulfillmentStatus() {
+      return FulfillmentStatus;
+    },
+    calendarMarkers() {
+      if (this.earliestOrder === undefined) {
+        return [];
+      }
 
-    }
+      const earliestOrderDateTime = new Date(this.earliestOrder.created_at);
+      const daysBetween = differenceInDays(earliestOrderDateTime, this.filter.dateRange[0]);
+      if (daysBetween < 1) {
+        return [];
+      }
+
+      return [{
+        date: earliestOrderDateTime,
+        type: 'line' as 'line',
+        tooltip: [{ text: `Tidligste ordre (${this.earliestOrder.name})` }]
+      }];
+    },
   },
   methods: {
     fetchOrders(): void {
@@ -241,18 +239,19 @@ export default defineComponent({
         this.products = products;
         this.tags = Array.from(new Set(products.flatMap(p => p.tags))).sort();
       });
-      const from = new Date(this.filter.dateRange[0].setHours(0, 0, 0, 0)).toISOString();
-      const to = new Date(addDays(this.filter.dateRange[1], 1).setHours(0, 0, 0, 0)).toISOString();
-      OrdersApi.ordersGet({ from, to, fulfillmentStatus: this.filter.fulfillmentStatus })
+      const params = {
+        from: startOfDay(this.filter.dateRange[0]).toISOString(),
+        to: startOfDay(addDays(this.filter.dateRange[1], 1)).toISOString(),
+        fulfillmentStatus: this.filter.fulfillmentStatus
+      }
+      OrdersApi.ordersGet(params)
         .subscribe((orders: OrderDTO[]) => {
           this.orderLineSummaries = this.toOrderLineSummaries(orders);
-          this.earliestOrder = orders.sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime())[0];
+
+          const ordersByDate = orders.sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime());
+          this.earliestOrder = ordersByDate[0];
+          this.latestOrder = ordersByDate[ordersByDate.length - 1];
         });
-    },
-    getImageBySku(sku: string): string {
-      return this.products
-          .find(p => p.variants.some(v => v.sku == sku))?.imgUrl ??
-        'https://cdn.shopify.com/s/files/1/0276/3902/1652/files/FantastiskeFroe_logo_mini_32x32.png?v=1583103209';
     },
     toOrderLineSummaries(orders: OrderDTO[]): OrderLineSummary[] {
       // Extract order lines
@@ -310,6 +309,19 @@ export default defineComponent({
           orders: acc.orders.concat(other.orders).sort((a, b) => a.name.localeCompare(b.name))
         };
       }
+    },
+    getImageBySku(sku: string): string {
+      return this.products
+          .find(p => p.variants.some(v => v.sku == sku))?.imgUrl ??
+          'https://cdn.shopify.com/s/files/1/0276/3902/1652/files/FantastiskeFroe_logo_mini_32x32.png?v=1583103209';
+    },
+    plural(number: number, singular: string, plural: string): string {
+      return number === 1 ? singular.replace('{}', number.toString()) : plural.replace('{}', number.toString());
+    },
+    getTotalNumberOfOrders(orderLineSummaries: OrderLineSummary[]): number {
+      return new Set(orderLineSummaries
+      .flatMap((orderLineSummary: OrderLineSummary) => orderLineSummary.orders)
+      .map((order: OrderDTO) => order.number)).size;
     },
     getTotalNumberOfProducts(orderLineSummaries: OrderLineSummary[]): number {
       return orderLineSummaries
