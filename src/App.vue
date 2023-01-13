@@ -87,44 +87,48 @@
     </div>
 
     <div class="row">
-      <table class="table table-striped">
-        <thead class="sticky-top bg-white">
-        <tr>
-          <th class="d-print-none"></th>
-          <th>Titel</th>
-          <th class="text-center">Antal</th>
-          <th>Ordrer</th>
-        </tr>
-        </thead>
-        <tbody class="table-group-divider">
-        <tr v-for="summary in filteredOrderLineSummaries" v-bind:key="summary.sku"
-            class="align-middle">
-          <td class="text-center d-print-none">
-            <img :src=getImageBySku(summary.sku) loading="lazy" class="img-thumbnail"
-                 :alt="summary.title">
-          </td>
-          <td>
-            {{ summary.title }}
-            <br>
-            <span class="text-secondary">
+      <div class="table-responsive">
+        <table class="table table-striped">
+          <thead class="sticky-top bg-white">
+          <tr>
+            <th class="d-print-none"></th>
+            <th>Titel</th>
+            <th class="text-center">Antal</th>
+            <th>Ordrer</th>
+          </tr>
+          </thead>
+          <tbody class="table-group-divider">
+          <tr v-for="summary in filteredOrderLineSummaries" v-bind:key="summary.sku"
+              class="align-middle">
+            <td class="text-center d-print-none">
+              <img :src=getImageBySku(summary.sku) loading="lazy" class="img-thumbnail"
+                   :alt="summary.title">
+            </td>
+            <td>
+              {{ summary.title }}
+              <br>
+              <span class="text-secondary">
               {{ summary.sku }}
             </span>
-          </td>
-          <td class="text-center">
-            {{ summary.quantity }}
-          </td>
-          <td>
-            <div>
-              <a href="#" v-for="order in summary.orders" v-bind:key="order.number"
-                 @click="selectedOrder = order"
-                 data-bs-toggle="modal" data-bs-target="#orderModal" class="link-primary me-1">
-                {{ order.name }}
-              </a>
-            </div>
-          </td>
-        </tr>
-        </tbody>
-      </table>
+            </td>
+            <td class="text-center">
+              {{ summary.quantity }}
+            </td>
+            <td>
+              <p>
+                <span v-for="order in summary.orders" v-bind:key="order.number">
+                  <a href="#"
+                     @click="selectedOrder = order"
+                     data-bs-toggle="modal" data-bs-target="#orderModal"
+                     class="link-primary">{{ order.name }}</a>
+                  &thinsp;
+                </span>
+              </p>
+            </td>
+          </tr>
+          </tbody>
+        </table>
+      </div>
     </div>
   </div>
 </template>
@@ -376,6 +380,10 @@ export default defineComponent({
 
 
 <style scoped lang="scss">
+.table {
+  table-layout: fixed;
+}
+
 .img-thumbnail {
   height: 48px !important;
 }
