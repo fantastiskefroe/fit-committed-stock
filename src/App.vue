@@ -9,33 +9,53 @@
 
     <div class="offcanvas-body d-flex flex-column justify-content-between">
       <div class="container">
+
+        <div class="row">
+          <div class="col gy-3">
+            <label for="fulfillmentStatusFilterInput" class="form-label">Klargøringsstatus</label>
+            <div class="input-group">
+              <select class="form-select form-control" id="fulfillmentStatusFilterInput"
+                      v-model="filter.fulfillmentStatus">
+                <option value="undefined">Alle</option>
+                <option v-for="statusType in Object.values(FulfillmentStatus)"
+                        v-bind:key="statusType" :value="statusType">
+                  {{ statusType }}
+                </option>
+              </select>
+              <button class="btn btn-outline-secondary" type="button" :disabled="filter.fulfillmentStatus === undefined"
+                      @click="filter.fulfillmentStatus = undefined">
+                Ryd
+              </button>
+            </div>
+          </div>
+        </div>
+
         <div class="row">
           <div class="col gy-3">
             <label for="tagFilterInput" class="form-label">Tag</label>
-            <select id="tagFilterInput" class="form-select" v-model="filter.tag">
-              <option value="">Ingen filter</option>
-              <option v-for="tag in tags" v-bind:key="tag" :value="tag">{{ tag }}</option>
-            </select>
+            <div class="input-group">
+              <select id="tagFilterInput" class="form-select" v-model="filter.tag">
+                <option value="undefined">Alle</option>
+                <option v-for="tag in tags" v-bind:key="tag" :value="tag">{{ tag }}</option>
+              </select>
+              <button class="btn btn-outline-secondary" type="button" :disabled="filter.tag === undefined"
+                      @click="filter.tag = undefined">
+                Ryd
+              </button>
+            </div>
           </div>
         </div>
 
         <div class="row">
           <div class="col gy-3">
             <label for="skuFilterInput" class="form-label">SKU</label>
-            <input type="text" class="form-control" id="skuFilterInput" v-model="filter.skuRegex">
-          </div>
-        </div>
-
-        <div class="row">
-          <div class="col gy-3">
-            <label for="fulfillmentStatusFilterInput" class="form-label">Klargøringsstatus</label>
-            <select class="form-select form-control" id="fulfillmentStatusFilterInput"
-                    v-model="filter.fulfillmentStatus">
-              <option v-for="statusType in Object.values(FulfillmentStatus)"
-                      v-bind:key="statusType" :value="statusType">
-                {{ statusType }}
-              </option>
-            </select>
+            <div class="input-group">
+              <input type="text" class="form-control" id="skuFilterInput" v-model="filter.skuRegex">
+              <button class="btn btn-outline-secondary" type="button" :disabled="filter.skuRegex === undefined"
+                      @click="filter.skuRegex = undefined">
+                Ryd
+              </button>
+            </div>
           </div>
         </div>
 
@@ -46,7 +66,7 @@
                         :close-on-auto-apply="false" :clearable="false"
                         :enable-time-picker="false" :preset-ranges="presetRanges"
                         :markers="calendarMarkers"
-                        range/>
+                        range />
           </div>
         </div>
       </div>
@@ -76,9 +96,9 @@
                class="bi bi-gear"
                viewBox="0 0 16 16">
             <path
-                d="M8 4.754a3.246 3.246 0 1 0 0 6.492 3.246 3.246 0 0 0 0-6.492zM5.754 8a2.246 2.246 0 1 1 4.492 0 2.246 2.246 0 0 1-4.492 0z"/>
+              d="M8 4.754a3.246 3.246 0 1 0 0 6.492 3.246 3.246 0 0 0 0-6.492zM5.754 8a2.246 2.246 0 1 1 4.492 0 2.246 2.246 0 0 1-4.492 0z" />
             <path
-                d="M9.796 1.343c-.527-1.79-3.065-1.79-3.592 0l-.094.319a.873.873 0 0 1-1.255.52l-.292-.16c-1.64-.892-3.433.902-2.54 2.541l.159.292a.873.873 0 0 1-.52 1.255l-.319.094c-1.79.527-1.79 3.065 0 3.592l.319.094a.873.873 0 0 1 .52 1.255l-.16.292c-.892 1.64.901 3.434 2.541 2.54l.292-.159a.873.873 0 0 1 1.255.52l.094.319c.527 1.79 3.065 1.79 3.592 0l.094-.319a.873.873 0 0 1 1.255-.52l.292.16c1.64.893 3.434-.902 2.54-2.541l-.159-.292a.873.873 0 0 1 .52-1.255l.319-.094c1.79-.527 1.79-3.065 0-3.592l-.319-.094a.873.873 0 0 1-.52-1.255l.16-.292c.893-1.64-.902-3.433-2.541-2.54l-.292.159a.873.873 0 0 1-1.255-.52l-.094-.319zm-2.633.283c.246-.835 1.428-.835 1.674 0l.094.319a1.873 1.873 0 0 0 2.693 1.115l.291-.16c.764-.415 1.6.42 1.184 1.185l-.159.292a1.873 1.873 0 0 0 1.116 2.692l.318.094c.835.246.835 1.428 0 1.674l-.319.094a1.873 1.873 0 0 0-1.115 2.693l.16.291c.415.764-.42 1.6-1.185 1.184l-.291-.159a1.873 1.873 0 0 0-2.693 1.116l-.094.318c-.246.835-1.428.835-1.674 0l-.094-.319a1.873 1.873 0 0 0-2.692-1.115l-.292.16c-.764.415-1.6-.42-1.184-1.185l.159-.291A1.873 1.873 0 0 0 1.945 8.93l-.319-.094c-.835-.246-.835-1.428 0-1.674l.319-.094A1.873 1.873 0 0 0 3.06 4.377l-.16-.292c-.415-.764.42-1.6 1.185-1.184l.292.159a1.873 1.873 0 0 0 2.692-1.115l.094-.319z"/>
+              d="M9.796 1.343c-.527-1.79-3.065-1.79-3.592 0l-.094.319a.873.873 0 0 1-1.255.52l-.292-.16c-1.64-.892-3.433.902-2.54 2.541l.159.292a.873.873 0 0 1-.52 1.255l-.319.094c-1.79.527-1.79 3.065 0 3.592l.319.094a.873.873 0 0 1 .52 1.255l-.16.292c-.892 1.64.901 3.434 2.541 2.54l.292-.159a.873.873 0 0 1 1.255.52l.094.319c.527 1.79 3.065 1.79 3.592 0l.094-.319a.873.873 0 0 1 1.255-.52l.292.16c1.64.893 3.434-.902 2.54-2.541l-.159-.292a.873.873 0 0 1 .52-1.255l.319-.094c1.79-.527 1.79-3.065 0-3.592l-.319-.094a.873.873 0 0 1-.52-1.255l.16-.292c.893-1.64-.902-3.433-2.541-2.54l-.292.159a.873.873 0 0 1-1.255-.52l-.094-.319zm-2.633.283c.246-.835 1.428-.835 1.674 0l.094.319a1.873 1.873 0 0 0 2.693 1.115l.291-.16c.764-.415 1.6.42 1.184 1.185l-.159.292a1.873 1.873 0 0 0 1.116 2.692l.318.094c.835.246.835 1.428 0 1.674l-.319.094a1.873 1.873 0 0 0-1.115 2.693l.16.291c.415.764-.42 1.6-1.185 1.184l-.291-.159a1.873 1.873 0 0 0-2.693 1.116l-.094.318c-.246.835-1.428.835-1.674 0l-.094-.319a1.873 1.873 0 0 0-2.692-1.115l-.292.16c-.764.415-1.6-.42-1.184-1.185l.159-.291A1.873 1.873 0 0 0 1.945 8.93l-.319-.094c-.835-.246-.835-1.428 0-1.674l.319-.094A1.873 1.873 0 0 0 3.06 4.377l-.16-.292c-.415-.764.42-1.6 1.185-1.184l.292.159a1.873 1.873 0 0 0 2.692-1.115l.094-.319z" />
           </svg>
           Indstillinger
         </button>
@@ -142,7 +162,18 @@ import ProductsService from '@/util/products-service';
 import OrderModal from '@/components/OrderModal.vue';
 import Datepicker from '@vuepic/vue-datepicker';
 import '@vuepic/vue-datepicker/dist/main.css';
-import {addDays, differenceInDays, endOfMonth, endOfYear, startOfDay, startOfMonth, startOfYear, subMonths} from 'date-fns'
+import {
+  addDays,
+  differenceInDays,
+  endOfMonth,
+  endOfYear,
+  startOfDay,
+  startOfMonth,
+  startOfYear,
+  subDays,
+  subMonths,
+  subYears
+} from 'date-fns';
 
 interface OrderLine {
   sku: string;
@@ -158,6 +189,8 @@ interface OrderLineSummary {
   orders: OrderDTO[];
 }
 
+const now = new Date();
+
 export default defineComponent({
   components: { OrderModal, Datepicker },
   data() {
@@ -169,41 +202,50 @@ export default defineComponent({
       selectedOrder: undefined as OrderDTO | undefined,
 
       filter: {
-        fulfillmentStatus: FulfillmentStatus.Null,
-        dateRange: [addDays(new Date(), -7), new Date()],
-        skuRegex: '',
-        tag: 'stalden'
+        fulfillmentStatus: FulfillmentStatus.Null as FulfillmentStatus | undefined,
+        dateRange: [subDays(now, 7), now],
+        skuRegex: undefined as string | undefined,
+        tag: 'stalden' as string | undefined
       },
       presetRanges: [
-        {label: 'I dag', range: [new Date(), new Date()]},
-        {label: 'Denne måned', range: [startOfMonth(new Date()), endOfMonth(new Date())]},
+        { label: 'I dag', range: [now, now] },
+        { label: 'I går', range: [subDays(now, 1), subDays(now, 1)] },
+        { label: 'Denne måned', range: [startOfMonth(now), endOfMonth(now)] },
         {
           label: 'Sidste måned',
-          range: [startOfMonth(subMonths(new Date(), 1)), endOfMonth(subMonths(new Date(), 1))]
+          range: [startOfMonth(subMonths(now, 1)), endOfMonth(subMonths(now, 1))]
         },
-        {label: 'I år', range: [startOfYear(new Date()), endOfYear(new Date())]}
+        { label: 'I år', range: [startOfYear(now), endOfYear(now)] },
+        { label: 'Sidste år', range: [startOfYear(subYears(now, 1)), endOfYear(subYears(now, 1))] }
       ]
     };
   },
   computed: {
     filteredOrderLineSummaries(): OrderLineSummary[] {
-      function filterSku(filter: string): (summaries: OrderLineSummary[]) => OrderLineSummary[] {
+      function filterSku(filter: string | undefined): (summaries: OrderLineSummary[]) => OrderLineSummary[] {
         return (summaries: OrderLineSummary[]) => {
-          if (filter.trim().length == 0) return summaries;
+          if (filter === undefined || filter.trim().length === 0) {
+            return summaries;
+          }
+
           try {
             const filterRegex = RegExp(filter, 'i');
-            return summaries.filter(s => filterRegex.test(s.sku));
+            return summaries.filter((summary) => filterRegex.test(summary.sku));
           } catch {
             return [];
           }
         };
       }
 
-      function filterTag(tag: string, products: Product[]): (summaries: OrderLineSummary[]) => OrderLineSummary[] {
+      function filterTag(tag: string | undefined, products: Product[]): (summaries: OrderLineSummary[]) => OrderLineSummary[] {
         return (summaries: OrderLineSummary[]) => {
-          if (!tag) return summaries;
+          if (tag === undefined) {
+            return summaries;
+          }
+
           return summaries.filter(s => {
-            const product: Product | undefined = products.find(p => p.variants.findIndex(v => v.sku === s.sku) !== -1);
+            const product: Product | undefined = products
+              .find(p => p.variants.findIndex(v => v.sku === s.sku) !== -1);
             if (product === undefined) {
               return false;
             }
@@ -218,7 +260,7 @@ export default defineComponent({
         filterTag(this.filter.tag, this.products)
       ];
 
-      return filters.reduce((lines, f) => f(lines), this.orderLineSummaries);
+      return filters.reduce((lines, filter) => filter(lines), this.orderLineSummaries);
     },
     earliestOrder(): OrderDTO | undefined {
       const ordersByDate = this.filteredOrderLineSummaries
@@ -229,8 +271,8 @@ export default defineComponent({
     },
     latestOrder(): OrderDTO | undefined {
       const ordersByDate = this.filteredOrderLineSummaries
-      .flatMap((orderLineSummary: OrderLineSummary) => orderLineSummary.orders)
-      .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+        .flatMap((orderLineSummary: OrderLineSummary) => orderLineSummary.orders)
+        .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
 
       return ordersByDate[0];
     },
@@ -252,7 +294,7 @@ export default defineComponent({
           result.push({
             date: earliestOrderDateTime,
             type: 'dot',
-            tooltip: [{text: `Tidligste ordre (${this.earliestOrder.name})`}]
+            tooltip: [{ text: `Tidligste ordre (${this.earliestOrder.name})` }]
           });
         }
       }
@@ -264,14 +306,14 @@ export default defineComponent({
           result.push({
             date: latestOrderDateTime,
             type: 'dot',
-            tooltip: [{text: `Seneste ordre (${this.latestOrder.name})`, color: 'green'}],
+            tooltip: [{ text: `Seneste ordre (${this.latestOrder.name})`, color: 'green' }],
             color: 'green'
           });
         }
       }
 
       return result;
-    },
+    }
   },
   methods: {
     fetchOrders(): void {
@@ -283,7 +325,7 @@ export default defineComponent({
         from: startOfDay(this.filter.dateRange[0]).toISOString(),
         to: startOfDay(addDays(this.filter.dateRange[1], 1)).toISOString(),
         fulfillmentStatus: this.filter.fulfillmentStatus
-      }
+      };
       OrdersApi.ordersGet(params)
         .subscribe((orders: OrderDTO[]) => {
           this.orderLineSummaries = this.toOrderLineSummaries(orders);
@@ -349,15 +391,15 @@ export default defineComponent({
     getImageBySku(sku: string): string {
       return this.products
           .find(p => p.variants.some(v => v.sku == sku))?.imgUrl ??
-          'https://cdn.shopify.com/s/files/1/0276/3902/1652/files/FantastiskeFroe_logo_mini_32x32.png?v=1583103209';
+        'https://cdn.shopify.com/s/files/1/0276/3902/1652/files/FantastiskeFroe_logo_mini_32x32.png?v=1583103209';
     },
     plural(number: number, singular: string, plural: string): string {
       return number === 1 ? singular.replace('{}', number.toString()) : plural.replace('{}', number.toString());
     },
     getTotalNumberOfOrders(orderLineSummaries: OrderLineSummary[]): number {
       return new Set(orderLineSummaries
-      .flatMap((orderLineSummary: OrderLineSummary) => orderLineSummary.orders)
-      .map((order: OrderDTO) => order.number)).size;
+        .flatMap((orderLineSummary: OrderLineSummary) => orderLineSummary.orders)
+        .map((order: OrderDTO) => order.number)).size;
     },
     getTotalNumberOfProducts(orderLineSummaries: OrderLineSummary[]): number {
       return orderLineSummaries
