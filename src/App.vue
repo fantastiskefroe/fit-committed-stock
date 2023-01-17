@@ -121,8 +121,10 @@
           <tr v-for="summary in filteredOrderLineSummaries" v-bind:key="summary.sku"
               class="align-middle">
             <td class="text-center d-print-none">
-              <img :src="getImageUrlByProductId(summary.productId) ?? getImageUrlBySku(summary.sku) ?? 'https://cdn.shopify.com/s/files/1/0276/3902/1652/files/FantastiskeFroe_logo_mini_32x32.png?v=1583103209'" loading="lazy" class="img-thumbnail"
-                   :alt="summary.title">
+              <img
+                :src="getImageUrlByProductId(summary.productId) ?? 'https://cdn.shopify.com/s/files/1/0276/3902/1652/files/FantastiskeFroe_logo_mini_32x32.png?v=1583103209'"
+                loading="lazy" class="img-thumbnail"
+                :alt="summary.title">
             </td>
             <td>
               {{ summary.title }}
@@ -155,7 +157,7 @@
 
 <script lang="ts">
 import { OrdersApi } from '@/util/api';
-import { CancelReasonOutput, FulfillmentStatus, type OrderOutput, type OrderLineOutput } from '@/api/shopify-data';
+import { CancelReasonOutput, FulfillmentStatus, type OrderLineOutput, type OrderOutput } from '@/api/shopify-data';
 import { defineComponent } from 'vue';
 import type { Product } from '@/types/product';
 import ProductsService from '@/util/products-service';
@@ -246,10 +248,7 @@ export default defineComponent({
           }
 
           return summaries.filter((summary: OrderLineSummary) => {
-            // Find by product by id, sku if that fails
-            return products.find((product) => product.id === summary.productId) ??
-              products.find(p => p.variants.some((v) => v.sku === summary.sku))
-              ?.tags.includes(tag);
+            return products.find((product) => product.id === summary.productId)?.tags.includes(tag);
           });
         };
       }
@@ -353,7 +352,7 @@ export default defineComponent({
       function orderLineFromDTO(order: OrderOutput, line: OrderLineOutput): OrderLine {
         return {
           sku: line.sku,
-          productId: line.product_id ?? 0,
+          productId: line.product_id,
           title: line.title,
           quantity: line.quantity,
           order: order
@@ -392,11 +391,7 @@ export default defineComponent({
     },
     getImageUrlByProductId(productId: number): string | undefined {
       return this.products
-          .find((product: Product) => product.id === productId)?.imgUrl;
-    },
-    getImageUrlBySku(sku: string): string | undefined {
-      return this.products
-        .find((product: Product) => product.variants.some((v) => v.sku == sku))?.imgUrl;
+        .find((product: Product) => product.id === productId)?.imgUrl;
     },
     plural(number: number, singular: string, plural: string): string {
       return number === 1 ? singular.replace('{}', number.toString()) : plural.replace('{}', number.toString());
