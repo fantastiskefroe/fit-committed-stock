@@ -75,9 +75,9 @@
         <div class="row">
           <div class="col text-center text-secondary">
             <span>
-              {{ plural(getTotalNumberOfOrders(filteredOrderLineSummaries), '{} ordre', '{} ordrer') }} |
-              {{ plural(getTotalNumberOfProducts(filteredOrderLineSummaries), '{} produkt', '{} produkter') }} |
-              {{ plural(filteredOrderLineSummaries.length, '{} unikt varenummer', '{} unikke varenumre') }}
+              {{ plural(totalNumberOfOrders, '{} ordre', '{} ordrer') }} |
+              {{ plural(totalNumberOfProducts, '{} produkt', '{} produkter') }} |
+              {{ plural(totalNumberOfOrderLineSummaries, '{} unikt varenummer', '{} unikke varenumre') }}
             </span>
           </div>
         </div>
@@ -143,7 +143,6 @@
                      @click="selectedOrder = order"
                      data-bs-toggle="modal" data-bs-target="#orderModal"
                      class="link-primary">{{ order.name }}</a>
-                  &thinsp;
                 </span>
               </p>
             </td>
@@ -166,7 +165,6 @@ import Datepicker from '@vuepic/vue-datepicker';
 import '@vuepic/vue-datepicker/dist/main.css';
 import {
   addDays,
-  differenceInDays,
   endOfMonth,
   endOfYear,
   startOfDay,
@@ -260,19 +258,17 @@ export default defineComponent({
 
       return filters.reduce((lines, filter) => filter(lines), this.orderLineSummaries);
     },
-    earliestOrder(): OrderOutput | undefined {
-      const ordersByDate = this.filteredOrderLineSummaries
+    totalNumberOfOrders(): number {
+      return new Set(this.filteredOrderLineSummaries
         .flatMap((orderLineSummary: OrderLineSummary) => orderLineSummary.orders)
-        .sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime());
-
-      return ordersByDate[0];
+        .map((order: OrderOutput) => order.number)).size;
     },
-    latestOrder(): OrderOutput | undefined {
-      const ordersByDate = this.filteredOrderLineSummaries
-        .flatMap((orderLineSummary: OrderLineSummary) => orderLineSummary.orders)
-        .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
-
-      return ordersByDate[0];
+    totalNumberOfProducts(): number {
+      return this.filteredOrderLineSummaries
+        .reduce((acc: number, current: OrderLineSummary) => acc + current.quantity, 0);
+    },
+    totalNumberOfOrderLineSummaries(): number {
+      return this.filteredOrderLineSummaries.length;
     },
     FulfillmentStatus() {
       return FulfillmentStatus;
@@ -281,33 +277,34 @@ export default defineComponent({
       const result: {
         date: Date | string;
         type?: 'dot' | 'line';
-        tooltip?: { text?: string; html?: string; color?: string }[];
         color?: string;
+        tooltip?: { text?: string; html?: string; color?: string }[];
       }[] = [];
 
-      if (this.earliestOrder !== undefined) {
-        const earliestOrderDateTime = new Date(this.earliestOrder.created_at);
-        const daysBetween = differenceInDays(earliestOrderDateTime, this.filter.dateRange[0]);
-        if (daysBetween > 0) {
-          result.push({
-            date: earliestOrderDateTime,
-            type: 'dot',
-            tooltip: [{ text: `Tidligste ordre (${this.earliestOrder.name})` }]
-          });
-        }
+      const uniqueOrderCreationDateTimes = new Set(this.filteredOrderLineSummaries
+        .flatMap((summary) => summary.orders)
+        .map((order) => order.created_at));
+      const ordersByDate = this.groupBy(
+        [...uniqueOrderCreationDateTimes],
+        dateTime => startOfDay(new Date(dateTime)).toISOString());
+
+      ordersByDate.forEach((value, key) => {
+        result.push({
+          date: key,
+          type: 'line',
+          color: getColor(value.length),
+          tooltip: [{ text: this.plural(value.length, '{} ordre', '{} ordrer') }]
+        });
+      });
+
+      function getColor(value: number) {
+        const normalized = normalize(value, 0, 25);
+        const hue = normalized * 120;
+        return `hsl(${hue},75%,50%)`;
       }
 
-      if (this.latestOrder !== undefined) {
-        const latestOrderDateTime = new Date(this.latestOrder.created_at);
-        const daysBetween = differenceInDays(latestOrderDateTime, this.filter.dateRange[1]);
-        if (daysBetween < 0) {
-          result.push({
-            date: latestOrderDateTime,
-            type: 'dot',
-            tooltip: [{ text: `Seneste ordre (${this.latestOrder.name})`, color: 'green' }],
-            color: 'green'
-          });
-        }
+      function normalize(input: number, min: number, max: number): number {
+        return (input - min) / (max - min);
       }
 
       return result;
@@ -319,9 +316,10 @@ export default defineComponent({
         this.products = products;
         this.tags = Array.from(new Set(products.flatMap(p => p.tags))).sort();
       });
+
       const params = {
-        from: startOfDay(this.filter.dateRange[0]).toISOString(),
-        to: startOfDay(addDays(this.filter.dateRange[1], 1)).toISOString(),
+        from: startOfDay(this.filter.dateRange[0]) as unknown as string,
+        to: startOfDay(addDays(this.filter.dateRange[1], 1)) as unknown as string,
         fulfillmentStatus: this.filter.fulfillmentStatus
       };
       OrdersApi.getOrders(params)
@@ -338,7 +336,7 @@ export default defineComponent({
           .map((line: OrderLineOutput) => orderLineFromDTO(order, line)));
 
       // Group by sku
-      const orderLinesBySku = groupBy(orderLines, line => line.sku);
+      const orderLinesBySku = this.groupBy(orderLines, line => line.sku);
 
       // Combine to OrderLineSummaries
       return Array.from(orderLinesBySku.values())
@@ -357,16 +355,6 @@ export default defineComponent({
           quantity: line.quantity,
           order: order
         };
-      }
-
-      function groupBy<K, V>(list: V[], keyExtractor: (v: V) => K): Map<K, V[]> {
-        return list.reduce((groups: Map<K, V[]>, value: V) => {
-          const key = keyExtractor(value);
-          const group = groups.get(key) ?? [];
-          group.push(value);
-          groups.set(key, group);
-          return groups;
-        }, new Map());
       }
 
       function toOrderLineSummary(orderLine: OrderLine): OrderLineSummary {
@@ -393,17 +381,17 @@ export default defineComponent({
       return this.products
         .find((product: Product) => product.id === productId)?.imgUrl;
     },
+    groupBy<K, V>(list: V[], keyExtractor: (v: V) => K): Map<K, V[]> {
+      return list.reduce((groups: Map<K, V[]>, value: V) => {
+        const key = keyExtractor(value);
+        const group = groups.get(key) ?? [];
+        group.push(value);
+        groups.set(key, group);
+        return groups;
+      }, new Map());
+    },
     plural(number: number, singular: string, plural: string): string {
       return number === 1 ? singular.replace('{}', number.toString()) : plural.replace('{}', number.toString());
-    },
-    getTotalNumberOfOrders(orderLineSummaries: OrderLineSummary[]): number {
-      return new Set(orderLineSummaries
-        .flatMap((orderLineSummary: OrderLineSummary) => orderLineSummary.orders)
-        .map((order: OrderOutput) => order.number)).size;
-    },
-    getTotalNumberOfProducts(orderLineSummaries: OrderLineSummary[]): number {
-      return orderLineSummaries
-        .reduce((acc: number, current: OrderLineSummary) => acc + current.quantity, 0);
     }
   },
   watch: {
