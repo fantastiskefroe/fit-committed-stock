@@ -245,14 +245,11 @@ export default defineComponent({
             return summaries;
           }
 
-          return summaries.filter(s => {
-            const product: Product | undefined = products
-              .find(p => p.variants.findIndex(v => v.sku === s.sku) !== -1);
-            if (product === undefined) {
-              return false;
-            }
-
-            return product.tags.includes(tag);
+          return summaries.filter((summary: OrderLineSummary) => {
+            // Find by product by id, sku if that fails
+            return products.find((product) => product.id === summary.productId) ??
+              products.find(p => p.variants.some((v) => v.sku === summary.sku))
+              ?.tags.includes(tag);
           });
         };
       }
