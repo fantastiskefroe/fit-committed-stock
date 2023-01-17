@@ -43,13 +43,13 @@
 
 <script lang="ts">
 import { defineComponent, type PropType } from 'vue';
-import type { OrderDTO } from '@/api/shopify-data';
+import type { OrderOutput } from '@/api/shopify-data';
 
 
 export default defineComponent({
   name: 'OrderView',
   props: {
-    order: { type: Object as PropType<OrderDTO>, required: false }
+    order: { type: Object as PropType<OrderOutput>, required: false }
   }
 });
 </script>

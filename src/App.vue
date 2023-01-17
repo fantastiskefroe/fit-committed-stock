@@ -155,7 +155,7 @@
 
 <script lang="ts">
 import { OrdersApi } from '@/util/api';
-import { CancelReason, FulfillmentStatus, type OrderDTO, type OrderLineDTO } from '@/api/shopify-data';
+import { CancelReasonOutput, FulfillmentStatus, type OrderOutput, type OrderLineOutput } from '@/api/shopify-data';
 import { defineComponent } from 'vue';
 import type { Product } from '@/types/product';
 import ProductsService from '@/util/products-service';
@@ -180,7 +180,7 @@ interface OrderLine {
   productId: number;
   title: string;
   quantity: number;
-  order: OrderDTO;
+  order: OrderOutput;
 }
 
 interface OrderLineSummary {
@@ -188,7 +188,7 @@ interface OrderLineSummary {
   productId: number;
   title: string;
   quantity: number;
-  orders: OrderDTO[];
+  orders: OrderOutput[];
 }
 
 const now = new Date();
@@ -201,7 +201,7 @@ export default defineComponent({
       tags: [] as string[],
 
       orderLineSummaries: [] as OrderLineSummary[],
-      selectedOrder: undefined as OrderDTO | undefined,
+      selectedOrder: undefined as OrderOutput | undefined,
 
       filter: {
         fulfillmentStatus: FulfillmentStatus.Null as FulfillmentStatus | undefined,
@@ -261,14 +261,14 @@ export default defineComponent({
 
       return filters.reduce((lines, filter) => filter(lines), this.orderLineSummaries);
     },
-    earliestOrder(): OrderDTO | undefined {
+    earliestOrder(): OrderOutput | undefined {
       const ordersByDate = this.filteredOrderLineSummaries
         .flatMap((orderLineSummary: OrderLineSummary) => orderLineSummary.orders)
         .sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime());
 
       return ordersByDate[0];
     },
-    latestOrder(): OrderDTO | undefined {
+    latestOrder(): OrderOutput | undefined {
       const ordersByDate = this.filteredOrderLineSummaries
         .flatMap((orderLineSummary: OrderLineSummary) => orderLineSummary.orders)
         .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
@@ -325,18 +325,18 @@ export default defineComponent({
         to: startOfDay(addDays(this.filter.dateRange[1], 1)).toISOString(),
         fulfillmentStatus: this.filter.fulfillmentStatus
       };
-      OrdersApi.ordersGet(params)
-        .subscribe((orders: OrderDTO[]) => {
+      OrdersApi.getOrders(params)
+        .subscribe((orders: OrderOutput[]) => {
           this.orderLineSummaries = this.toOrderLineSummaries(orders);
         });
     },
-    toOrderLineSummaries(orders: OrderDTO[]): OrderLineSummary[] {
+    toOrderLineSummaries(orders: OrderOutput[]): OrderLineSummary[] {
       // Extract order lines
       const orderLines: OrderLine[] = orders
-        .filter((order: OrderDTO) => order.cancel_reason === CancelReason.Null)
-        .flatMap((order: OrderDTO) => order.line_items
-          .filter((line: OrderLineDTO) => line.refunded === false)
-          .map((line: OrderLineDTO) => orderLineFromDTO(order, line)));
+        .filter((order: OrderOutput) => order.cancel_reason === CancelReasonOutput.Null)
+        .flatMap((order: OrderOutput) => order.line_items
+          .filter((line: OrderLineOutput) => !line.refunded)
+          .map((line: OrderLineOutput) => orderLineFromDTO(order, line)));
 
       // Group by sku
       const orderLinesBySku = groupBy(orderLines, line => line.sku);
@@ -350,12 +350,12 @@ export default defineComponent({
         )
         .sort((a, b) => a.title.localeCompare(b.title));
 
-      function orderLineFromDTO(order: OrderDTO, line: OrderLineDTO): OrderLine {
+      function orderLineFromDTO(order: OrderOutput, line: OrderLineOutput): OrderLine {
         return {
           sku: line.sku,
           productId: line.product_id ?? 0,
           title: line.title,
-          quantity: line.quantity ?? 0,
+          quantity: line.quantity,
           order: order
         };
       }
@@ -404,11 +404,11 @@ export default defineComponent({
     getTotalNumberOfOrders(orderLineSummaries: OrderLineSummary[]): number {
       return new Set(orderLineSummaries
         .flatMap((orderLineSummary: OrderLineSummary) => orderLineSummary.orders)
-        .map((order: OrderDTO) => order.number)).size;
+        .map((order: OrderOutput) => order.number)).size;
     },
     getTotalNumberOfProducts(orderLineSummaries: OrderLineSummary[]): number {
       return orderLineSummaries
-        .reduce((acc: number, current: OrderLineSummary) => acc + (current.quantity ?? 0), 0);
+        .reduce((acc: number, current: OrderLineSummary) => acc + current.quantity, 0);
     }
   },
   watch: {
