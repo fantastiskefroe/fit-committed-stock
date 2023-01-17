@@ -1,5 +1,5 @@
 export interface VariantDTO {
-    id: string;
+    id: number;
     title: string;
     sku: string;
     inventory: number;

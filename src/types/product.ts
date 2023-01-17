@@ -1,7 +1,7 @@
 import type {Variant} from "@/types/variant";
 
 export interface Product {
-    id: string;
+    id: number;
     title: string;
     url: string;
     imgUrl: string;

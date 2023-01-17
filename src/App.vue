@@ -121,7 +121,7 @@
           <tr v-for="summary in filteredOrderLineSummaries" v-bind:key="summary.sku"
               class="align-middle">
             <td class="text-center d-print-none">
-              <img :src=getImageBySku(summary.sku) loading="lazy" class="img-thumbnail"
+              <img :src="getImageUrlByProductId(summary.productId) ?? getImageUrlBySku(summary.sku) ?? 'https://cdn.shopify.com/s/files/1/0276/3902/1652/files/FantastiskeFroe_logo_mini_32x32.png?v=1583103209'" loading="lazy" class="img-thumbnail"
                    :alt="summary.title">
             </td>
             <td>
@@ -177,6 +177,7 @@ import {
 
 interface OrderLine {
   sku: string;
+  productId: number;
   title: string;
   quantity: number;
   order: OrderDTO;
@@ -184,6 +185,7 @@ interface OrderLine {
 
 interface OrderLineSummary {
   sku: string;
+  productId: number;
   title: string;
   quantity: number;
   orders: OrderDTO[];
@@ -354,6 +356,7 @@ export default defineComponent({
       function orderLineFromDTO(order: OrderDTO, line: OrderLineDTO): OrderLine {
         return {
           sku: line.sku,
+          productId: line.product_id ?? 0,
           title: line.title,
           quantity: line.quantity ?? 0,
           order: order
@@ -373,6 +376,7 @@ export default defineComponent({
       function toOrderLineSummary(orderLine: OrderLine): OrderLineSummary {
         return {
           sku: orderLine.sku,
+          productId: orderLine.productId,
           quantity: orderLine.quantity,
           title: orderLine.title,
           orders: [orderLine.order]
@@ -382,16 +386,20 @@ export default defineComponent({
       function combineSummaries(acc: OrderLineSummary, other: OrderLineSummary): OrderLineSummary {
         return {
           sku: acc.sku,
+          productId: acc.productId,
           title: acc.title,
           quantity: acc.quantity + other.quantity,
           orders: acc.orders.concat(other.orders).sort((a, b) => a.name.localeCompare(b.name))
         };
       }
     },
-    getImageBySku(sku: string): string {
+    getImageUrlByProductId(productId: number): string | undefined {
       return this.products
-          .find(p => p.variants.some(v => v.sku == sku))?.imgUrl ??
-        'https://cdn.shopify.com/s/files/1/0276/3902/1652/files/FantastiskeFroe_logo_mini_32x32.png?v=1583103209';
+          .find((product: Product) => product.id === productId)?.imgUrl;
+    },
+    getImageUrlBySku(sku: string): string | undefined {
+      return this.products
+        .find((product: Product) => product.variants.some((v) => v.sku == sku))?.imgUrl;
     },
     plural(number: number, singular: string, plural: string): string {
       return number === 1 ? singular.replace('{}', number.toString()) : plural.replace('{}', number.toString());

@@ -1,5 +1,5 @@
 export interface Variant {
-    id: string;
+    id: number;
     sku: string;
     inventory: number;
 }
