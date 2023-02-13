@@ -5,12 +5,12 @@ updates:
     directory: /
     schedule:
       interval: daily
+      time: "07:00"
+      timezone: "Europe/Copenhagen"
 
   - package-ecosystem: npm
     directory: /
     schedule:
       interval: daily
-    ignore:
-      - dependency-name: "*"
-        # Ignore all patch updates
-        update-types: [ "version-update:semver-patch" ]
+      time: "07:00"
+      timezone: "Europe/Copenhagen"
