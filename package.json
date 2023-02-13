@@ -5,6 +5,7 @@
   "scripts": {
     "dev": "vite",
     "gen-api": "openapi-generator-cli generate -i https://shopify-data.it.fantastiskefroe.dk/q/openapi -g typescript-rxjs -o ./src/api/shopify-data --additional-properties=supportsES6=true",
+    "gen-api-test": "openapi-generator-cli generate -i https://shopify-data-test.it.fantastiskefroe.dk/q/openapi -g typescript-rxjs -o ./src/api/shopify-data --additional-properties=supportsES6=true",
     "build": "run-p gen-api && run-p type-check build-only",
     "preview": "vite preview",
     "build-only": "vite build",
