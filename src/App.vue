@@ -73,6 +73,13 @@
 
       <div class="container">
         <div class="row">
+          <div class="col gy-3">
+            <label for="fitTokenInput" class="form-label">Token</label>
+            <input type="password" class="form-control" id="fitTokenInput" v-model="fitToken">
+          </div>
+        </div>
+
+        <div class="row">
           <div class="col text-center text-secondary">
             <span>
               {{ plural(totalNumberOfOrders, '{} ordre', '{} ordrer') }} |
@@ -156,7 +163,13 @@
 
 <script lang="ts">
 import { OrdersApi } from '@/util/api';
-import { CancelReasonOutput, FulfillmentStatus, type OrderLineOutput, type OrderOutput } from '@/api/shopify-data';
+import {
+  CancelReasonOutput,
+  FulfillmentStatus,
+  type GetOrdersRequest,
+  type OrderLineOutput,
+  type OrderOutput
+} from '@/api/shopify-data';
 import { defineComponent } from 'vue';
 import type { Product } from '@/types/product';
 import ProductsService from '@/util/products-service';
@@ -174,6 +187,7 @@ import {
   subMonths,
   subYears
 } from 'date-fns';
+import {loadToken, saveToken} from "@/util/token-service";
 
 interface OrderLine {
   sku: string;
@@ -205,9 +219,9 @@ export default defineComponent({
 
       filter: {
         fulfillmentStatus: FulfillmentStatus.Null as FulfillmentStatus | undefined,
-        dateRange: [subDays(now, 7), now],
+        tag: 'stalden' as string | undefined,
         skuRegex: undefined as string | undefined,
-        tag: 'stalden' as string | undefined
+        dateRange: [subDays(now, 7), now],
       },
       presetRanges: [
         { label: 'I dag', range: [now, now] },
@@ -219,7 +233,8 @@ export default defineComponent({
         },
         { label: 'I år', range: [startOfYear(now), endOfYear(now)] },
         { label: 'Sidste år', range: [startOfYear(subYears(now, 1)), endOfYear(subYears(now, 1))] }
-      ]
+      ],
+      fitToken: "" as string
     };
   },
   computed: {
@@ -317,10 +332,11 @@ export default defineComponent({
         this.tags = Array.from(new Set(products.flatMap(p => p.tags))).sort();
       });
 
-      const params = {
+      const params: GetOrdersRequest = {
         from: startOfDay(this.filter.dateRange[0]) as unknown as string,
         to: startOfDay(addDays(this.filter.dateRange[1], 1)) as unknown as string,
-        fulfillmentStatus: this.filter.fulfillmentStatus
+        fulfillmentStatus: this.filter.fulfillmentStatus,
+        xFitToken: this.fitToken
       };
       OrdersApi.getOrders(params)
         .subscribe((orders: OrderOutput[]) => {
@@ -395,6 +411,10 @@ export default defineComponent({
     }
   },
   watch: {
+    fitToken(token: string): void {
+      saveToken(token);
+      this.fetchOrders();
+    },
     'filter.fulfillmentStatus'() {
       this.fetchOrders();
     },
@@ -403,6 +423,8 @@ export default defineComponent({
     }
   },
   mounted() {
+    this.fitToken = loadToken();
+
     this.fetchOrders();
   }
 });
